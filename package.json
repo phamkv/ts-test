@@ -13,7 +13,10 @@
     "@node-wot/binding-http": "^0.8.8",
     "@node-wot/core": "^0.8.8",
     "axios": "^1.5.1",
-    "ethr-did": "^2.3.20"
+    "base64url": "^3.0.1",
+    "ethr-did": "^2.3.20",
+    "jose": "^4.15.1",
+    "node-jose": "^2.2.0"
   },
   "devDependencies": {
     "@types/node": "^20.6.1"
