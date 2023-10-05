@@ -11,7 +11,7 @@ const servient = new Servient();
 servient.addClientFactory(new HttpClientFactory(null));
 const WoTHelpers = new Helpers(servient);
 
-const fetchUrl = "http://localhost:8080/counter?hash=925538559ee5bfbe1304fbb0270b85f523f43955a77a458628780e9b586e25f2"
+const fetchUrl = "http://localhost:8080/counter?hash=d48a582886dd7d5ce803c0f34301a68c2e097fafc5becd3f8003781af0bca760"
 
 WoTHelpers.fetch(fetchUrl).then(async (td) => {
     try {
