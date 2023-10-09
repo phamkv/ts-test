@@ -12,9 +12,11 @@ async function resolveDIDWeb(url) {
 
 export async function resolvePublicKeyWeb(url) {
   const didDocument = await resolveDIDWeb(url)
+  return {
+    "keys": didDocument["verificationMethod"].filter(method => "publicKeyJwk" in method).map(method => method.publicKeyJwk)
+  }
     
-  return didDocument["verificationMethod"].find(method => method.id === didDocument["authentication"][0]).publicKeyJwk
+  // return didDocument["verificationMethod"].find(method => method.id === didDocument["authentication"][0]).publicKeyJwk
 }
-
-// const doc = await resolvePublicKeyWeb('did:web:phamkv.github.io:things:thing1')
+//const doc = await resolvePublicKeyWeb('did:web:phamkv.github.io:things:thing1')
 // console.log(doc)

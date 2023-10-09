@@ -8,6 +8,15 @@
             "kid": "Gxh-VPsN6tOak9mKJZqEVrtFjNpwXLkHrDV9HF4xGng",
             "use": "sig",
             "alg": "ES256K"
+        },
+        {
+            "kty": "EC",
+            "x": "6UNK5K3DyXr_gtWBEXkHoKJgOEt7787lRhuOGSjyeKU",
+            "y": "F5es6ztnfRKGklaJ4S83MtOqmEymj7R-OUKrA9HJR5E",
+            "crv": "P-256",
+            "kid": "7JFM0MyswT6TAtlzcEX0hqwyXyEEOtwjMlU7xMqCoXw",
+            "use": "sig",
+            "alg": "ES256"
         }
     ]
 }

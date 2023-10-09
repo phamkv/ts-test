@@ -34,7 +34,7 @@ const createSdJwt = async (jwkJson, jwt, hashAlg, claimValues) => {
 
 const SUPPORTED_IANA_HASH_ALG = ["sha-256", "sha-384", "sha-512"];
 
-export const createSdJwtFile = async (privateKeyPath, jwtPath, hashAlg, sdClaimsPath, outPath) => {
+export const createSdJwtFile = async (privateKeyPath, jwtPath, hashAlg, sdClaimsPath) => {
     Log(`Creating SD-JWT from the JWT ${jwtPath} using the private key ${privateKeyPath}, encoding selectively-disclosable claims from ${sdClaimsPath}`, LOG_LEVEL.INFO);
 
     // check hash alg
@@ -68,6 +68,5 @@ export const createSdJwtFile = async (privateKeyPath, jwtPath, hashAlg, sdClaims
 
     // create and write out the SD-JWT
     const sdJwt = await createSdJwt(jwkJson, jwt, hashAlg, sdClaims);
-    fs.writeFileSync(outPath, sdJwt);
-    Log(`SD-JWT written to ${outPath}`, LOG_LEVEL.INFO);
+    return sdJwt
 }
