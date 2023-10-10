@@ -1,0 +1,12 @@
+import { MessageClient } from "../utils/comm/commMessage.js";
+import { THING2_SECRETS } from "../utils/comm/test-vectors.js";
+
+const DIDSender = "did:web:phamkv.github.io:things:thing2"
+// const DIDReceiver = "did:web:phamkv.github.io:things:thing2"
+
+const messageClient = new MessageClient(DIDSender, THING2_SECRETS)
+
+const msg = '{"protected":"eyJ0eXAiOiJhcHBsaWNhdGlvbi9kaWRjb21tLWVuY3J5cHRlZCtqc29uIiwiYWxnIjoiRUNESC0xUFUrQTI1NktXIiwiZW5jIjoiQTI1NkNCQy1IUzUxMiIsInNraWQiOiJkaWQ6d2ViOnBoYW1rdi5naXRodWIuaW86dGhpbmdzOnRoaW5nMSNvd25lciIsImFwdSI6IlpHbGtPbmRsWWpwd2FHRnRhM1l1WjJsMGFIVmlMbWx2T25Sb2FXNW5jenAwYUdsdVp6RWpiM2R1WlhJIiwiYXB2IjoiaXNUd1duTEozY2hmcVMxd2h1Z2RuVzNTU3l5b3dscWI4WDNfWDMwT0RtWSIsImVwayI6eyJjcnYiOiJQLTI1NiIsImt0eSI6IkVDIiwieCI6InBaTVhnNHAyV1pTT29vX0VXMG52N0tzUTE5Q1J2S2NOLTVETkVkamtyOU0iLCJ5IjoickpHZE42bk5vNzVaWEpUeVZjUUZFcmRrUDR2ZTRWb0hyOVRMNU1hU0VINCJ9fQ","recipients":[{"header":{"kid":"did:web:phamkv.github.io:things:thing2#owner"},"encrypted_key":"NluVnVlEXJo3oQWSp5rx0ng-hwN9m74NN5gziPVHagt7ai0GTi0lHtsY4oqPAvUiqJ79RbRzJzmmyytHzTgjyX-Bi_jrmW_H"}],"iv":"l4K48L4nLWP7q0r-qKLFHA","ciphertext":"GEbb12HGD-a90MQv5mR57HbG0eHyeJWeAuhCD3jEiUcHO208FZmJp7khu3ORu7Pe2-uErCgUaVwEhn3dbkAeQSXGX_XcB6spUWCP6zVrfBg_GWbTcgNSN2hgOTASeLUOr_UXR0fOpUCu53RkbCMkdAFnOfjYo74LmbXG49iBhbek_zQIv-9D9ofxZfOpzdLY28iSrS2buV0-nyP8aRYLGNWNn97vgXHkQ1D1hzTLMh9FIwgMcBSUhAso8EeIyhqomFt7BBoi4eOL0NNnHGmetbl3uoXtuOjVQ7SPmcZ5x_jFWcrwyXxKaEweyjhFt1sSi-lLt2JqpoAVvN5h2rbHBvStXgJtwo7jTiIG8GNnxMk","tag":"_2Kzix_o0ZKfO1If34E_cYqtyEpLpW7sEgYvUAJT3U0"}'
+
+const unpackedMsg = await messageClient.unpackMessage(msg)
+console.log(unpackedMsg)

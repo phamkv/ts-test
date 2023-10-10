@@ -1,9 +1,8 @@
 import didcomm from "didcomm"
 const Message = didcomm.Message
 import { resolveDIDWeb } from "./didweb.js"
-import { THING1_SECRETS, THING2_SECRETS } from "./test-vectors.js"
 
-class ExampleDIDResolver {
+class WebDIDResolver {
   constructor() {
     console.log("")
   }
@@ -32,6 +31,55 @@ class ExampleSecretsResolver {
   }
 }
 
+export class MessageClient {
+  clientDID;
+  didResolver;
+  secretsResolver;
+
+  constructor(clientDID, clientSecret) {
+    this.clientDID = clientDID;
+    this.didResolver = new WebDIDResolver();
+    this.secretsResolver = new ExampleSecretsResolver(clientSecret);
+  }
+
+  async createMessage(recipientDID, message) {
+    const msg = new Message({
+      id: "1234567890",
+      typ: "application/didcomm-plain+json",
+      type: "http://example.com/protocols/lets_do_lunch/1.0/proposal",
+      from: this.clientDID,
+      to: [recipientDID],
+      body: message,
+    });
+
+    const [encryptedMsg, encryptMetadata] = await msg.pack_encrypted(
+      recipientDID,
+      this.clientDID,
+      null,
+      this.didResolver,
+      this.secretsResolver,
+      {
+        forward: false,
+      }
+    );
+    console.log(encryptMetadata)
+    return encryptedMsg
+  }
+
+  async unpackMessage(encryptedMsg) {
+    const [unpackedMsg, unpackMetadata] = await Message.unpack(
+      encryptedMsg,
+      this.didResolver,
+      this.secretsResolver,
+      {}
+    );
+    console.log(unpackMetadata)
+    return unpackedMsg.as_value()
+  }
+
+}
+
+/*
 const DIDSender = "did:web:phamkv.github.io:things:thing1"
 const DIDReceiver = "did:web:phamkv.github.io:things:thing2"
 
@@ -45,8 +93,8 @@ const msg = new Message({
 });
 console.log(msg)
 // --- Packing encrypted and authenticated message ---
-let didResolver = new ExampleDIDResolver();
-//let didResolver = new ExampleDIDResolver([THING1_DID_DOC, BOB_DID_DOC]);
+let didResolver = new WebDIDResolver();
+//let didResolver = new WebDIDResolver([THING1_DID_DOC, BOB_DID_DOC]);
 let secretsResolver = new ExampleSecretsResolver(THING1_SECRETS);
 
 const [encryptedMsg, encryptMetadata] = await msg.pack_encrypted(
@@ -75,3 +123,4 @@ const [unpackedMsg, unpackMetadata] = await Message.unpack(
 
 console.log("Reveived message is\n", unpackedMsg.as_value());
 console.log("Reveived message unpack metadata is\n", unpackMetadata);
+*/
