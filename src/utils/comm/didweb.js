@@ -1,7 +1,7 @@
 import { Resolver } from 'did-resolver'
 import { getResolver } from 'web-did-resolver'
 
-async function resolveDIDWeb(url) {
+export async function resolveDIDWeb(url) {
   const webResolver = getResolver()
   const resolver = new Resolver({
     ...webResolver
@@ -20,3 +20,5 @@ export async function resolvePublicKeyWeb(url) {
 }
 //const doc = await resolvePublicKeyWeb('did:web:phamkv.github.io:things:thing1')
 // console.log(doc)
+//const doc = await resolveDIDWeb("did:web:phamkv.github.io:things:thing1")
+//console.log(doc)

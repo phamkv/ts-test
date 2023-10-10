@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import base64url from 'base64url';
 import fs from 'fs';
-import { resolvePublicKeyWeb } from "./didweb.js"
+import { resolvePublicKeyWeb } from "../didweb.js"
 
 const iv = crypto.randomBytes(16);
 

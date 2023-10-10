@@ -17,7 +17,8 @@
     "did-resolver": "^4.1.0",
     "ethr-did": "^2.3.20",
     "jose": "^4.15.1",
-    "web-did-resolver": "^2.0.27"
+    "web-did-resolver": "^2.0.27",
+    "didcomm": "file:./didcomm_pkg"
   },
   "devDependencies": {
     "@types/node": "^20.6.1"
