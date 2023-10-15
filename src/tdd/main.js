@@ -1,16 +1,17 @@
 import express from 'express'
 import bodyParser from "body-parser"
+import jp from "jsonpath"
 import { MessageClient } from "../utils/comm/commMessage.js";
-import { TDD_SECRETS } from "../utils/comm/test-vectors.js";
+import { THING2_SECRETS } from "../utils/comm/test-vectors.js";
 
 const DIDSender = "did:web:phamkv.github.io:service:discovery"
-const messageClient = new MessageClient(DIDSender, TDD_SECRETS)
+const messageClient = new MessageClient(DIDSender, THING2_SECRETS)
 
 const app = express();
 const port = 3000;
 
 app.use(express.json());
-app.use(bodyParser.json({ type: 'application/didcomm-encrypted+json' }));
+app.use(bodyParser.text({ type: 'application/didcomm-encrypted+json' }));
 app.use(bodyParser.json({ type: 'discover-features/query' }));
 
 app.get('/', (req, res) => {
@@ -64,11 +65,27 @@ app.post('/registration', (req, res, next) => {
     return res.status(415).send('Unsupported Media Type');
   next();
 }, async (req, res) => {
-  // Handle Registration (sd-jwt verification and storing)
-  const msg = await messageClient.unpackMessage(req.body)
-  console.log(msg)
+  try {
+    // Handle Registration (sd-jwt verification and storing)
+    const msg = await messageClient.unpackMessage(req.body)
+    console.log(msg)
+    const presentationSubmission = msg.presentation_submission
+    // Possible hygiene test
+    const verfiableCredentials = presentationSubmission.descriptor_map.map(vc => jp.query(msg, vc.path)[0])
+    console.log(verfiableCredentials)
 
-  res.send("Hallo")
+
+    const path = [
+      "$.jwt.iss",
+      "$.disclosed.id",
+      "$.disclosed.title",
+      "$.disclosed.@type",
+      "$.disclosed.security"
+    ]
+    res.send("Hallo")
+  } catch (error) {
+    res.send(error)
+  }
 });
 
 // Presentation Request for TD Query
