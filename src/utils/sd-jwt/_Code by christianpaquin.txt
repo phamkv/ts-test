@@ -1,0 +1,4 @@
+The files in this folder (sd-jwt) are based on the following repository:
+https://github.com/christianpaquin/sd-jwt (accessed: October 2023)
+
+Some minor changes have been made to align to the code base of this project.
