@@ -1,7 +1,7 @@
 {
   "presentation_submission": {
     
-    
+    "definition_id": "td_query_definition",
     "descriptor_map": [
       {
         "id": "thing_description_credential",
