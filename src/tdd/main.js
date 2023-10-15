@@ -47,14 +47,8 @@ app.get('/', (req, res) => {
 });
 
 // Presentation Request for Registration
-app.get('/registration', (req, res, next) => {
-  const contentType = req.headers['content-type'];
-  if (contentType !== 'application/didcomm-encrypted+json')
-    return res.status(415).send('Unsupported Media Type');
-  next();
-}, (req, res) => {
-  // Handle the POST request here
-  res.send("Hallo")
+app.get('/registration', (req, res) => {
+  res.send("definition")
 });
 
 // DIDComm Presentation Submission for Registration
@@ -64,7 +58,7 @@ app.post('/registration', (req, res, next) => {
     return res.status(415).send('Unsupported Media Type');
   next();
 }, (req, res) => {
-  // Handle the POST request here
+  // Handle Registration (sd-jwt verification and storing)
   res.send("Hallo")
 });
 
@@ -72,21 +66,10 @@ app.post('/registration', (req, res, next) => {
 app.get('/query', (req, res, next) => {
   const contentType = req.headers['content-type'];
   if (contentType !== 'application/didcomm-encrypted+json')
-    return res.status(415).send('Unsupported Media Type');
+    return res.send("definition")
   next();
 }, (req, res) => {
-  // Handle the POST request here
-  res.send("Hallo")
-});
-
-// DIDComm Presentation Submission for TD Query
-app.post('/query', (req, res, next) => {
-  const contentType = req.headers['content-type'];
-  if (contentType !== 'application/didcomm-encrypted+json')
-    return res.status(415).send('Unsupported Media Type');
-  next();
-}, (req, res) => {
-  // Handle the POST request here
+  // Handle Query Request (sd-jwt verification and querying)
   res.send("Hallo")
 });
 
