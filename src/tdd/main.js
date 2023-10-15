@@ -65,9 +65,8 @@ app.post('/registration', (req, res, next) => {
   next();
 }, async (req, res) => {
   // Handle Registration (sd-jwt verification and storing)
-  const unpackedMsg = await messageClient.unpackMessage(req.body)
-  const msg = unpackedMsg.body
-  console.log(unpackedMsg)
+  const msg = await messageClient.unpackMessage(req.body)
+  console.log(msg)
 
   res.send("Hallo")
 });

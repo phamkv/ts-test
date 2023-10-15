@@ -30,111 +30,34 @@ export const THING2_SECRETS = [
   },
 ];
 
-
-export const THING1_DID_DOC = {
-  id: "did:web:phamkv.github.io:things:thing1",
-  keyAgreement: [
-    "did:web:phamkv.github.io:things:thing1#owner",
-  ],
-  authentication: [
-    "did:web:phamkv.github.io:things:thing1#owner",
-  ],
-  assertionMethod: [],
-  verificationMethod: [
-    {
-      id: "did:web:phamkv.github.io:things:thing1#owner",
-      type: "JsonWebKey2020",
-      controller: "did:web:phamkv.github.io:things:thing1",
-      publicKeyJwk: {
-        crv: "P-256",
-        kty: "EC",
-        x: "La5CZtPKGyiO9BXC4Pz8TBiWmT7KUygonwRAu5iHdqg",
-        y: "1t1LiboWV4KWHeJGIcPxgyxMLFjXGlp6Wga9pWjfD10",
-      }
-    },
-  ],
-  service: [],
-};
-
-export const ALICE_DID_DOC = {
-  id: "did:example:alice",
-  keyAgreement: [
-    "did:example:alice#key-p256-1",
-  ],
-  authentication: [
-    "did:example:alice#key-1",
-  ],
-  assertionMethod: [],
-  verificationMethod: [
-    {
-      id: "did:example:alice#key-p256-1",
-      type: "JsonWebKey2020",
-      controller: "did:example:alice#key-p256-1",
-      publicKeyJwk: {
-        crv: "P-256",
-        kty: "EC",
-        x: "L0crjMN1g0Ih4sYAJ_nGoHUck2cloltUpUVQDhF2nHE",
-        y: "SxYgE7CmEJYi7IDhgK5jI4ZiajO8jPRZDldVhqFpYoo",
-      },
-    },
-    {
-      id: "did:example:alice#key-1",
-      type: "JsonWebKey2020",
-      controller: "did:example:alice#key-1",
-      publicKeyJwk: {
-        crv: "Ed25519",
-        kty: "OKP",
-        x: "G-boxFB6vOZBu-wXkm-9Lh79I8nf9Z50cILaOgKKGww",
-      },
-    },
-  ],
-  service: [],
-};
-
-
-export const ALICE_SECRETS = [
+export const TDD_SECRETS = [
   {
-    id: "did:example:alice#key-1",
+    id: "did:web:phamkv.github.io:service:discovery#owner",
     type: "JsonWebKey2020",
     privateKeyJwk: {
-      crv: "Ed25519",
-      d: "pFRUKkyzx4kHdJtFSnlPA9WzqkDT1HWV0xZ5OYZd2SY",
-      kty: "OKP",
-      x: "G-boxFB6vOZBu-wXkm-9Lh79I8nf9Z50cILaOgKKGww",
-    },
-  },
-  {
-    id: "did:example:alice#key-p256-1",
-    type: "JsonWebKey2020",
-    privateKeyJwk: {
-      crv: "P-256",
-      d: "sB0bYtpaXyp-h17dDpMx91N3Du1AdN4z1FUq02GbmLw",
       kty: "EC",
-      x: "L0crjMN1g0Ih4sYAJ_nGoHUck2cloltUpUVQDhF2nHE",
-      y: "SxYgE7CmEJYi7IDhgK5jI4ZiajO8jPRZDldVhqFpYoo",
+      x: "MsZt5AAwz6A9C70AG7CBw0epdgv7esi1gEBcMGtpq60",
+      y: "O-B9d6J7Ev80jMLxbv47uv0irdtaVa8rwov8yMw2zos",
+      crv: "P-256",
+      d: "vvdodWe8LbWVJvXTA3WzAbZ-NQfEBUH1Yh4SJqErTuM",
+      kid: "cJLFA_0njBwHfmliTVT9ux72rYiTaQw607-oSbTWxpY",
+      use: "sig"
     },
   },
 ];
 
-
-export const BOB_DID_DOC = {
-  id: "did:example:bob",
-  keyAgreement: [
-    "did:example:bob#key-p256-1",
-  ],
-  authentication: [],
-  verificationMethod: [
-    {
-      id: "did:example:bob#key-p256-1",
-      type: "JsonWebKey2020",
-      controller: "did:example:bob#key-p256-1",
-      publicKeyJwk: {
-        crv: "P-256",
-        kty: "EC",
-        x: "FQVaTOksf-XsCUrt4J1L2UGvtWaDwpboVlqbKBY2AIo",
-        y: "6XFB9PYo7dyC5ViJSO9uXNYkxTJWn0d_mqJ__ZYhcNY",
-      },
+export const ISS1_SECRETS = [
+  {
+    id: "did:web:phamkv.github.io:issuer:manufacturer1#owner",
+    type: "JsonWebKey2020",
+    privateKeyJwk: {
+      kty: "EC",
+      x: "TthAsG7uLZfKpJ_eIKQQZLAqLfW5Y_db5Q6drbpeG1c",
+      y: "S5O2gx0phq7r3Rhqe-QtLIBuAWKsalTldNBfIxXxE_k",
+      crv: "P-256",
+      d: "f1L4TiqR2IclGHRdHOoBshAS_fyYG7XlCcoWydHBxCg",
+      kid: "bJqQFEDzYqNbhzF44khM1CApNw5v1HSGpWJOmKBMwN4",
+      use: "sig"
     },
-  ],
-  service: [],
-};
+  },
+];
