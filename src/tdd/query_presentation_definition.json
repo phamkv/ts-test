@@ -10,7 +10,7 @@
     }
   ],
   "presentation_definition": {
-    
+    "id": "td_query_definition",
     "input_descriptors": [
       {
         "id": "thing_description_credential",

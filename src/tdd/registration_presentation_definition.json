@@ -11,7 +11,7 @@
     }
   ],
   "presentation_definition": {
-    
+    "id": "td_registration_definition",
     "input_descriptors": [
       {
         "id": "thing_description_credential",

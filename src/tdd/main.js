@@ -1,5 +1,11 @@
 import express from 'express'
 import bodyParser from "body-parser"
+import { MessageClient } from "../utils/comm/commMessage.js";
+import { TDD_SECRETS } from "../utils/comm/test-vectors.js";
+
+const DIDSender = "did:web:phamkv.github.io:service:discovery"
+const messageClient = new MessageClient(DIDSender, TDD_SECRETS)
+
 const app = express();
 const port = 3000;
 
@@ -57,8 +63,12 @@ app.post('/registration', (req, res, next) => {
   if (contentType !== 'application/didcomm-encrypted+json')
     return res.status(415).send('Unsupported Media Type');
   next();
-}, (req, res) => {
+}, async (req, res) => {
   // Handle Registration (sd-jwt verification and storing)
+  const unpackedMsg = await messageClient.unpackMessage(req.body)
+  const msg = unpackedMsg.body
+  console.log(unpackedMsg)
+
   res.send("Hallo")
 });
 

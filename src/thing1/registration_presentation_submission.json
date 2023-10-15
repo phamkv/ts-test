@@ -6,7 +6,7 @@
       {
         "id": "thing_description_credential",
         "format": "sd_jwt_vc",
-        "path": "$.body.verifiableCredential[0]"
+        "path": "$.verifiableCredential[0]"
       }
     ]
   }

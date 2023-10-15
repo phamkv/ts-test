@@ -5,8 +5,8 @@ const DIDSender = "did:web:phamkv.github.io:things:thing1"
 const DIDReceiver = "did:web:phamkv.github.io:things:thing2"
 
 const obj = {
-  boy: "damn",
-  bruh: {
+  verifiable_credential: ["damn"],
+  presentation_submission: {
     what: "dafuq"
   },
 }

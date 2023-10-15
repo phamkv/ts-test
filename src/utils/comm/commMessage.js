@@ -43,14 +43,12 @@ export class MessageClient {
   }
 
   async createMessage(recipientDID, message) {
-    const msg = new Message({
-      id: "1234567890",
-      typ: "application/didcomm-plain+json",
-      type: "http://example.com/protocols/lets_do_lunch/1.0/proposal",
-      from: this.clientDID,
-      to: [recipientDID],
-      body: message,
-    });
+    message.id = String(Math.floor(Math.random() * 10000))
+    message.type = "application/didcomm-plain+json"
+    message.from = this.clientDID
+    message.to = [recipientDID]
+    message.body = {}
+    const msg = new Message(message);
 
     const [encryptedMsg, encryptMetadata] = await msg.pack_encrypted(
       recipientDID,
