@@ -1,5 +1,14 @@
-
 {
-  "iss": "did:ethr:goerli:0x03da2fabecf3172bdafd7ef51c043a41f4fd0b2e3b222d91ca9a02eb18e5bac20d"
+  "@context": [
+    "https://datatracker.ietf.org/doc/draft-ietf-oauth-selective-disclosure-jwt/",
+    "https://www.w3.org/ns/credentials/v2",
+    "https://www.w3.org/ns/credentials/examples/v2"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "ThingDescriptionCredential"
+  ],
+  "iss": "did:web:phamkv.github.io:issuer:manufacturer1",
+  "iat": 1683000000,
+  "exp": 1883000000
 }
-  

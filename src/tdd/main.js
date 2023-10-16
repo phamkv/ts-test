@@ -2,10 +2,10 @@ import express from 'express'
 import bodyParser from "body-parser"
 import jp from "jsonpath"
 import { MessageClient } from "../utils/comm/commMessage.js";
-import { THING2_SECRETS } from "../utils/comm/test-vectors.js";
+import { TDD_SECRETS } from "../utils/comm/test-vectors.js";
 
 const DIDSender = "did:web:phamkv.github.io:service:discovery"
-const messageClient = new MessageClient(DIDSender, THING2_SECRETS)
+const messageClient = new MessageClient(DIDSender, TDD_SECRETS)
 
 const app = express();
 const port = 3000;
