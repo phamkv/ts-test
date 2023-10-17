@@ -17,9 +17,9 @@ const createSdJwt = async (jwkJson, jwt, hashAlg, claimValues) => {
         const payload = Buffer.from(jwtString);
         Log("JWS payload: " + payload.toString("hex").toUpperCase(), LOG_LEVEL.DEBUG);
 
-        const jwk = await jose.importJWK(jwkJson, 'ES256K'); // TODO: generalize to other key types muss angepasst werden zu ES256K wenn Ethereum
+        const jwk = await jose.importJWK(jwkJson, 'ES256'); // TODO: generalize to other key types muss angepasst werden zu ES256K wenn Ethereum
         let jws = await new jose.CompactSign(payload)
-        .setProtectedHeader({ alg: 'ES256K' }) // hier auch
+        .setProtectedHeader({ alg: 'ES256' }) // hier auch
         .sign(jwk);
         if (disclosures) {
             jws = jws.concat('~' + disclosures.join('~'));
