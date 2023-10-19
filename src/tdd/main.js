@@ -10,6 +10,8 @@ function parseJwt (token) {
   return JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
 }
 
+const tdStorage = [] // Simple array storage for demo
+
 const DIDSender = "did:web:phamkv.github.io:service:discovery"
 const messageClient = new MessageClient(DIDSender, TDD_SECRETS)
 
@@ -64,19 +66,12 @@ app.get('/registration', (req, res) => {
   res.send("definition")
 });
 
-// DIDComm Presentation Submission for Registration
-app.post('/registration', (req, res, next) => {
-  const contentType = req.headers['content-type'];
-  if (contentType !== 'application/didcomm-encrypted+json')
-    return res.status(415).send('Unsupported Media Type');
-  next();
-}, async (req, res) => {
+const verifyCredential = async (encryptedMessage, jspath) => {
   try {
     // Handle Registration (sd-jwt verification and storing)
-    const msg = await messageClient.unpackMessage(req.body)
+    const msg = await messageClient.unpackMessage(encryptedMessage)
     console.log(msg)
     const presentationSubmission = msg.presentation_submission
-    // Possible hygiene test
     const verfiableCredentials = presentationSubmission.descriptor_map.map(vc => jp.query(msg, vc.path)[0])
     // console.log(verfiableCredentials)
     const sdJwt = verfiableCredentials[0].payload
@@ -89,17 +84,9 @@ app.post('/registration', (req, res, next) => {
       disclosed: JSON.parse(rv.disclosed)
     }
 
-    console.log(cred)
-    const path = [
-      "$.jwt.iss",
-      "$.disclosed.id",
-      "$.disclosed.title",
-      "$.disclosed['@type']",
-      "$.disclosed.security"
-    ]
-    for (let jspath of path) {
+    for (let path of jspath) {
       try {
-        if (jp.query(cred, jspath).length < 1 ) {
+        if (jp.query(cred, path).length < 1 ) {
           res.send("Credential does not have the required attributes")
           return
         }
@@ -109,12 +96,38 @@ app.post('/registration', (req, res, next) => {
         return
       }
     }
+    return { cred, msg }
+  } catch (error) {
+    throw error
+  }
+}
 
+// DIDComm Presentation Submission for Registration
+app.post('/registration', (req, res, next) => {
+  const contentType = req.headers['content-type'];
+  if (contentType !== 'application/didcomm-encrypted+json')
+    return res.status(415).send('Unsupported Media Type');
+  next();
+}, async (req, res) => {
+  try {
+    const jspath = [
+      "$.jwt.iss",
+      "$.disclosed.id",
+      "$.disclosed.title",
+      "$.disclosed['@type']",
+      "$.disclosed.security"
+    ]
+    const { cred, msg } = await verifyCredential(req.body, jspath)
+    console.log(cred)
+    console.log(msg)
     // Credential verified and valid according to the presentation definition
     // Registration will be processed now
+    const thingDescription = {
+      iss: cred.jwt.iss,
+      ...cred.disclosed
+    }
 
-
-    res.send("Hallo")
+    res.send(thingDescription)
   } catch (error) {
     console.log(error)
     res.send(error)
@@ -127,8 +140,16 @@ app.get('/query', (req, res, next) => {
   if (contentType !== 'application/didcomm-encrypted+json')
     return res.send("definition")
   next();
-}, (req, res) => {
+}, async (req, res) => {
   // Handle Query Request (sd-jwt verification and querying)
+  const jspath = [
+    "$.jwt.iss",
+    "$.disclosed.id"
+  ]
+  const { cred, msg } = await verifyCredential(req.body, jspath)
+  console.log(cred)
+
+
   res.send("Hallo")
 });
 
