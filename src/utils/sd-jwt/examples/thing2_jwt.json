@@ -1,0 +1,14 @@
+{
+  "@context": [
+    "https://datatracker.ietf.org/doc/draft-ietf-oauth-selective-disclosure-jwt/",
+    "https://www.w3.org/ns/credentials/v2",
+    "https://www.w3.org/ns/credentials/examples/v2"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "ThingDescriptionCredential"
+  ],
+  "iss": "did:web:phamkv.github.io:issuer:manufacturer2",
+  "iat": 1683000000,
+  "exp": 1883000000
+}

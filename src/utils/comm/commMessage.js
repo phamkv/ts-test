@@ -47,7 +47,9 @@ export class MessageClient {
     message.type = "application/didcomm-plain+json"
     message.from = this.clientDID
     message.to = [recipientDID]
-    message.body = {}
+    if (!("body" in message)) {
+      message.body = {}
+    } 
     const msg = new Message(message);
 
     const [encryptedMsg, encryptMetadata] = await msg.pack_encrypted(

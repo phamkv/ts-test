@@ -1,12 +1,41 @@
+import fs from "fs"
+import {fileURLToPath} from 'url';
+import path from "path"
 import { MessageClient } from "../utils/comm/commMessage.js";
 import { THING2_SECRETS } from "../utils/comm/test-vectors.js";
+import { discloseClaims } from "../utils/sd-jwt/disclose-claims.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.resolve(__filename, "..");
 
 const DIDSender = "did:web:phamkv.github.io:things:thing2"
-// const DIDReceiver = "did:web:phamkv.github.io:things:thing2"
+const DIDReceiver = "did:web:phamkv.github.io:service:discovery"
+const sdJwt = fs.readFileSync(path.resolve(__dirname, "sd-jwt-test.json"), 'utf8');
+
+const claims = "id @type" // this needs to be based on the presentation definition
+
+const outSdJwt = await discloseClaims(sdJwt, claims);
+
+const obj = {
+  verifiable_credential: [{
+    payload: outSdJwt
+  }],
+  presentation_submission: {
+    id: String(Math.floor(Math.random() * 10000)),
+    definition_id: "td_query_definition",
+    descriptor_map: [
+      {
+        id: "thing_description_credential",
+        format: "sd_jwt_vc",
+        path: "$.verifiable_credential[0]"
+      }
+    ]
+  },
+  body: {
+    types: ["saref:LightSwitch", "saref:Light", "saref:LightingDevice"]
+  }
+}
 
 const messageClient = new MessageClient(DIDSender, THING2_SECRETS)
-
-const msg = '{"protected":"eyJ0eXAiOiJhcHBsaWNhdGlvbi9kaWRjb21tLWVuY3J5cHRlZCtqc29uIiwiYWxnIjoiRUNESC0xUFUrQTI1NktXIiwiZW5jIjoiQTI1NkNCQy1IUzUxMiIsInNraWQiOiJkaWQ6d2ViOnBoYW1rdi5naXRodWIuaW86dGhpbmdzOnRoaW5nMSNvd25lciIsImFwdSI6IlpHbGtPbmRsWWpwd2FHRnRhM1l1WjJsMGFIVmlMbWx2T25Sb2FXNW5jenAwYUdsdVp6RWpiM2R1WlhJIiwiYXB2IjoiaXNUd1duTEozY2hmcVMxd2h1Z2RuVzNTU3l5b3dscWI4WDNfWDMwT0RtWSIsImVwayI6eyJjcnYiOiJQLTI1NiIsImt0eSI6IkVDIiwieCI6Ild0SkJIclpKRnRYWDlBbVVVZE9wYTNUZGVKNjlnYnlwLU5ZM2hQYTRNZUkiLCJ5IjoiRElISFRBOEdTUTcxRHpSYklkajFQLTk3S0s0cWY3LS1MdF8taEtsdWNpSSJ9fQ","recipients":[{"header":{"kid":"did:web:phamkv.github.io:things:thing2#owner"},"encrypted_key":"FvpjhUbbpRCqcRAfI6FPQc3qe-jSuiJcQ7xVo8Y5qgDuD2SCwbILi6fRyRZxKB8PZya4mpTHNqQ7yPJo2IwbWiHuTFzSCmXN"}],"iv":"9dnZ0v9p41PUs02eRG4uZQ","ciphertext":"mngO_vOb-5fK1o1prcBfz3JWNDAg66ityPuV6sZm87kX0G5KDx6-ccYdc-nlVOfDk_LZqjIe6CYPL1qUiGMZwHfXcvYFtc-OnnsYuDCAP4qK6q9GvNuyynKPBuhbLWY9Xu7fSyPw8m9Jq1inRlIWrouXdFlcvW_DiogAGdEHki5mmy50r1fNQVdXaxCynQN2oWb-ofZIC_SKrgtJj4uTlsfF6AR1I6EQ4KMbKamKktHNbN1E4Oje29ixVW_2G6lYkDCEvlq_z23Lt0DePzkWwB19q5QnmaJjbkKH8ec7jOSUVco3fvA7E8BRKfeys5OMQPPzzX_ypeQffj5JmezLmrFXpOALlTW83eWAsDC7T0EaZNga-SA3Sm2GYcW6f39X","tag":"WR5IkbMzmAwwTBOCxKYB4FAdEK-tdSTfNObVWvs_XS8"}'
-
-const unpackedMsg = await messageClient.unpackMessage(msg)
-console.log(unpackedMsg)
+const msg = await messageClient.createMessage(DIDReceiver, obj)
+console.log(msg)

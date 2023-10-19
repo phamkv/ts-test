@@ -11,6 +11,13 @@ function parseJwt (token) {
 }
 
 const tdStorage = [] // Simple array storage for demo
+const registerThing = (thingDescription) => { // stub for storaging
+  if (tdStorage.find(td => td.id === thingDescription.id) !== undefined) return
+  tdStorage.push(thingDescription) // simple push for demo purposes
+}
+const queryThings = (type) => { // stub for querying
+  return tdStorage.filter(td => type.includes(td["@type"])) // simple filter for demo purposes
+}
 
 const DIDSender = "did:web:phamkv.github.io:service:discovery"
 const messageClient = new MessageClient(DIDSender, TDD_SECRETS)
@@ -126,6 +133,7 @@ app.post('/registration', (req, res, next) => {
       iss: cred.jwt.iss,
       ...cred.disclosed
     }
+    registerThing(thingDescription)
 
     res.send(thingDescription)
   } catch (error) {
@@ -148,9 +156,10 @@ app.get('/query', (req, res, next) => {
   ]
   const { cred, msg } = await verifyCredential(req.body, jspath)
   console.log(cred)
+  console.log(msg)
+  const things = queryThings(msg.body["types"])
 
-
-  res.send("Hallo")
+  res.send(things)
 });
 
 app.listen(port, () => {
