@@ -3,7 +3,7 @@ import * as jose from 'jose';
 import { DisclosureArray, parseDisclosure } from './selective-disclosure.js';
 import { Log, LOG_LEVEL } from './utils.js';
 
-const discloseClaims = async (sdJwt, claims) => {
+export const discloseClaims = async (sdJwt, claims) => {
     // split SD-JWS into JWS and Disclosures
     const parts = sdJwt.split('~');
     if (parts.length <= 1) {

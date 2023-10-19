@@ -3,6 +3,12 @@ import bodyParser from "body-parser"
 import jp from "jsonpath"
 import { MessageClient } from "../utils/comm/commMessage.js";
 import { TDD_SECRETS } from "../utils/comm/test-vectors.js";
+import { verifySdJwt } from '../utils/sd-jwt/verify-sd-jwt.js';
+import { resolvePublicKeyWeb } from '../utils/comm/didweb.js';
+
+function parseJwt (token) {
+  return JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+}
 
 const DIDSender = "did:web:phamkv.github.io:service:discovery"
 const messageClient = new MessageClient(DIDSender, TDD_SECRETS)
@@ -72,18 +78,45 @@ app.post('/registration', (req, res, next) => {
     const presentationSubmission = msg.presentation_submission
     // Possible hygiene test
     const verfiableCredentials = presentationSubmission.descriptor_map.map(vc => jp.query(msg, vc.path)[0])
-    console.log(verfiableCredentials)
+    // console.log(verfiableCredentials)
+    const sdJwt = verfiableCredentials[0].payload
 
+    const jwksBytes = await resolvePublicKeyWeb(parseJwt(sdJwt).iss)
 
+    const rv = await verifySdJwt(sdJwt, jwksBytes)
+    const cred = {
+      jwt: JSON.parse(rv.jwt),
+      disclosed: JSON.parse(rv.disclosed)
+    }
+
+    console.log(cred)
     const path = [
       "$.jwt.iss",
       "$.disclosed.id",
       "$.disclosed.title",
-      "$.disclosed.@type",
+      "$.disclosed['@type']",
       "$.disclosed.security"
     ]
+    for (let jspath of path) {
+      try {
+        if (jp.query(cred, jspath).length < 1 ) {
+          res.send("Credential does not have the required attributes")
+          return
+        }
+      } catch (error) {
+        console.log(error)
+        res.send(error)
+        return
+      }
+    }
+
+    // Credential verified and valid according to the presentation definition
+    // Registration will be processed now
+
+
     res.send("Hallo")
   } catch (error) {
+    console.log(error)
     res.send(error)
   }
 });

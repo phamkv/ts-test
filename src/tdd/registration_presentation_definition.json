@@ -24,7 +24,7 @@
                 "$.jwt.iss",
                 "$.disclosed.id",
                 "$.disclosed.title",
-                "$.disclosed.@type",
+                "$.disclosed['@type']",
                 "$.disclosed.security"
               ]
             }
