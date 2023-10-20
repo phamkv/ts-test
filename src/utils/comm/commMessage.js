@@ -62,7 +62,7 @@ export class MessageClient {
         forward: false,
       }
     );
-    console.log(encryptMetadata)
+    // console.log(encryptMetadata)
     return encryptedMsg
   }
 
@@ -73,7 +73,7 @@ export class MessageClient {
       this.secretsResolver,
       {}
     );
-    console.log(unpackMetadata)
+    // console.log(unpackMetadata)
     return unpackedMsg.as_value()
   }
 

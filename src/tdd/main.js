@@ -77,7 +77,7 @@ const verifyCredential = async (encryptedMessage, jspath) => {
   try {
     // Handle Registration (sd-jwt verification and storing)
     const msg = await messageClient.unpackMessage(encryptedMessage)
-    console.log(msg)
+    // console.log(msg)
     const presentationSubmission = msg.presentation_submission
     const verfiableCredentials = presentationSubmission.descriptor_map.map(vc => jp.query(msg, vc.path)[0])
     // console.log(verfiableCredentials)
@@ -112,11 +112,13 @@ const verifyCredential = async (encryptedMessage, jspath) => {
 // DIDComm Presentation Submission for Registration
 app.post('/registration', (req, res, next) => {
   const contentType = req.headers['content-type'];
+  console.log(contentType)
   if (contentType !== 'application/didcomm-encrypted+json')
     return res.status(415).send('Unsupported Media Type');
   next();
 }, async (req, res) => {
   try {
+    // console.log(req)
     const jspath = [
       "$.jwt.iss",
       "$.disclosed.id",
@@ -125,8 +127,8 @@ app.post('/registration', (req, res, next) => {
       "$.disclosed.security"
     ]
     const { cred, msg } = await verifyCredential(req.body, jspath)
-    console.log(cred)
-    console.log(msg)
+    // console.log(cred)
+    // console.log(msg)
     // Credential verified and valid according to the presentation definition
     // Registration will be processed now
     const thingDescription = {
@@ -134,8 +136,15 @@ app.post('/registration', (req, res, next) => {
       ...cred.disclosed
     }
     registerThing(thingDescription)
+    const obj = {
+      body: {
+        status: "202",
+        stored: {...thingDescription}
+      }
+    }
 
-    res.send(thingDescription)
+    const sending = await messageClient.createMessage(msg.from, obj)
+    res.send(sending)
   } catch (error) {
     console.log(error)
     res.send(error)
@@ -143,10 +152,12 @@ app.post('/registration', (req, res, next) => {
 });
 
 // Presentation Request for TD Query
-app.get('/query', (req, res, next) => {
+app.all('/query', (req, res, next) => {
   const contentType = req.headers['content-type'];
-  if (contentType !== 'application/didcomm-encrypted+json')
+  console.log(contentType)
+  if (contentType !== 'application/didcomm-encrypted+json') {
     return res.send("definition")
+  }
   next();
 }, async (req, res) => {
   // Handle Query Request (sd-jwt verification and querying)
@@ -155,11 +166,18 @@ app.get('/query', (req, res, next) => {
     "$.disclosed.id"
   ]
   const { cred, msg } = await verifyCredential(req.body, jspath)
-  console.log(cred)
-  console.log(msg)
+  //console.log(cred)
+  //console.log(msg)
   const things = queryThings(msg.body["types"])
+  const obj = {
+    body: {
+      status: "202",
+      query: things
+    }
+  }
 
-  res.send(things)
+  const sending = await messageClient.createMessage(msg.from, obj)
+  res.send(sending)
 });
 
 app.listen(port, () => {
