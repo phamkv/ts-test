@@ -19,9 +19,20 @@ async function queryProtocolPresentationExchange(DIDReceiver, serviceEndpoint, b
     // Retrieve Presentation Definition (Protocol)
     const response1 = await axios.get(serviceEndpoint);
     const definition = response1.data;
-    console.log('Step 1 response:', definition); // TODO: work with definition
+    console.log('Step 1 response:', definition);
 
-    const claims = "id @type" // this needs to be based on the presentation definition
+    // Set disclosed attributes according to definition
+    const constraints = definition.presentation_definition.input_descriptors[0].constraints.fields[0].path
+    console.log(constraints)
+    const claims = constraints.filter(element => element.includes("$.disclosed")).map(str => {
+      const parts = str.split('.')
+      let propName = parts[parts.length - 1]
+      if (propName.includes('[')) {
+        propName = propName.replace(/[\[\]']/g, '')
+        propName = propName.replace("disclosed", '')
+      }
+      return propName
+    }) // ["id"]
     const outSdJwt = await discloseClaims(sdJwt, claims);
     const obj = {
       verifiable_credential: [{

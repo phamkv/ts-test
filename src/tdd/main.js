@@ -1,10 +1,16 @@
 import express from 'express'
 import bodyParser from "body-parser"
 import jp from "jsonpath"
+import fs from "fs"
+import {fileURLToPath} from 'url';
+import path from "path"
 import { MessageClient } from "../utils/comm/commMessage.js";
 import { TDD_SECRETS } from "../utils/comm/test-vectors.js";
 import { verifySdJwt } from '../utils/sd-jwt/verify-sd-jwt.js';
 import { resolvePublicKeyWeb } from '../utils/comm/didweb.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.resolve(__filename, "..");
 
 function parseJwt (token) {
   return JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
@@ -70,7 +76,8 @@ app.get('/', (req, res) => {
 
 // Presentation Request for Registration
 app.get('/registration', (req, res) => {
-  res.send("definition")
+  const sdJwt = fs.readFileSync(path.resolve(__dirname, "registration_presentation_definition.json"), 'utf8');
+  res.send(sdJwt)
 });
 
 const verifyCredential = async (encryptedMessage, jspath) => {
@@ -94,13 +101,13 @@ const verifyCredential = async (encryptedMessage, jspath) => {
     for (let path of jspath) {
       try {
         if (jp.query(cred, path).length < 1 ) {
-          res.send("Credential does not have the required attributes")
-          return
+          const obj = { body: "Credential does not have the required attributes" }
+          const sending = await messageClient.createMessage(msg.from, obj)
+          throw sending
         }
       } catch (error) {
         console.log(error)
-        res.send(error)
-        return
+        throw error
       }
     }
     return { cred, msg }
@@ -156,7 +163,8 @@ app.all('/query', (req, res, next) => {
   const contentType = req.headers['content-type'];
   console.log(contentType)
   if (contentType !== 'application/didcomm-encrypted+json') {
-    return res.send("definition")
+    const sdJwt = fs.readFileSync(path.resolve(__dirname, "query_presentation_definition.json"), 'utf8');
+    return res.send(sdJwt)
   }
   next();
 }, async (req, res) => {
