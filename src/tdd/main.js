@@ -16,13 +16,20 @@ function parseJwt (token) {
   return JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
 }
 
-const tdStorage = [] // Simple array storage for demo
+const tdStorage = {} // Simple hashmap storage for demo
 const registerThing = (thingDescription) => { // stub for storaging
-  if (tdStorage.find(td => td.id === thingDescription.id) !== undefined) return
-  tdStorage.push(thingDescription) // simple push for demo purposes
+  tdStorage[thingDescription.id] = thingDescription;
 }
-const queryThings = (type) => { // stub for querying
-  return tdStorage.filter(td => type.includes(td["@type"])) // simple filter for demo purposes
+
+const queryThings = (types) => { // stub for querying
+  const filteredThings = [];
+  for (const key in tdStorage) {
+    const thingDescription = tdStorage[key];
+    if (types.includes(thingDescription["@type"])) {
+      filteredThings.push(thingDescription);
+    }
+  }
+  return filteredThings;
 }
 
 const DIDSender = "did:web:phamkv.github.io:service:discovery"
