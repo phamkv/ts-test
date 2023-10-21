@@ -41,7 +41,7 @@ async function registerThing() {
       }],
       presentation_submission: {
         id: String(Math.floor(Math.random() * 10000)),
-        definition_id: "td_registration_definition",
+        definition_id: definition.presentation_definition.id,
         descriptor_map: [
           {
             id: "thing_description_credential",

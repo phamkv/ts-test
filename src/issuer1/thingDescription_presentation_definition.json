@@ -1,0 +1,41 @@
+{
+  "comment": [
+    {
+      "transport": "DIDComm v2",
+      "content-type": "application/didcomm-encrypted+json",
+      "endpoint": "/thingDescription",
+      "rest": {
+        "get": "Send Thing Description Retrieval Request"
+      }
+    }
+  ],
+  "presentation_definition": {
+    "id": "td_retrieval_definition",
+    "input_descriptors": [
+      {
+        "id": "thing_description_credential",
+        "name": "Thing Description Verifiable Credential of Manufacturer",
+        "purpose": "We can only allow Verifiable Credentials of Things from recognized manufacturers",
+        "constraints": {
+          "fields": [
+            {
+              "path": [
+                "$.jwt.iss",
+                "$.disclosed.id",
+                "$.disclosed['@type']"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "format": {
+      "sd_jwt_vc": {
+        "alg": ["ES256"],
+        "proof_type": [
+          "JsonWebSignature2020"
+        ]
+      }
+    }
+  }
+}

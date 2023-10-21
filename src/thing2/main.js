@@ -40,7 +40,7 @@ async function queryProtocolPresentationExchange(DIDReceiver, serviceEndpoint, b
       }],
       presentation_submission: {
         id: String(Math.floor(Math.random() * 10000)),
-        definition_id: "td_query_definition",
+        definition_id: definition.presentation_definition.id,
         descriptor_map: [
           {
             id: "thing_description_credential",
@@ -60,8 +60,8 @@ async function queryProtocolPresentationExchange(DIDReceiver, serviceEndpoint, b
       },
     });
     const msg = await messageClient.unpackMessage(JSON.stringify(response2.data))
-    console.log('Step 2 response:', msg.body.query);
-    return msg.body.query
+    console.log('Step 2 response:', msg);
+    return msg
   } catch (error) {
     console.error('An error occurred:', error);
   }
@@ -72,14 +72,18 @@ const payload1 = {
   types: ["saref:LightSwitch", "saref:Light", "saref:LightingDevice"]
 }
 const tddDID = "did:web:phamkv.github.io:service:discovery"
-const things = await queryProtocolPresentationExchange(tddDID, 'http://localhost:3000/query', payload1);
+const things = await queryProtocolPresentationExchange(tddDID, 'http://localhost:3000/query', payload1).then(msg => msg.body.query)
+//const things = [{id: "did:web:phamkv.github.io:things:thing1"}]
 
+console.log(things)
 // Retrieve full Thing Description from Issuer
-const thingInfo = things[0]
+const thingInfo = {dids: [things[0].id]}
+console.log(thingInfo)
 const issuer1DID = "did:web:phamkv.github.io:issuer:manufacturer1"
-// const thingDescription = await queryProtocolPresentationExchange(issuer1DID, 'http://localhost:4000/thingDescription', thingInfo)
+const thingDescriptions = await queryProtocolPresentationExchange(issuer1DID, 'http://localhost:4000/thingDescription', thingInfo).then(msg => msg.body.thingDescriptions)
 
-// console.log(thingDescription)
+console.log(thingDescriptions)
 // Consume TD and send test request to Thing1
+const thingDescription = thingDescriptions[0]
 
 // TODO retrieving service endpoint from DIDDoc, then retrieving api endpoint using discover feature protocol
