@@ -8,10 +8,14 @@ function calculateHash(data) {
 }
 
 export async function createHashlink(url) {
-  const response = await axios.get(url);
-  const dataToHash = JSON.stringify(response.data);
-  const objectHash = calculateHash(dataToHash);
-  return `${url}?hash=${objectHash}`;
+  try {
+    const response = await axios.get(url);
+    const dataToHash = JSON.stringify(response.data);
+    const objectHash = calculateHash(dataToHash);
+    return `${url}?hash=${objectHash}`;
+  } catch (error) {
+    console.log("ERROR hashlink")
+  }
 }
 
 async function createHashlinkData({data, url}) {

@@ -11,24 +11,51 @@ const servient = new Servient();
 servient.addClientFactory(new HttpClientFactory(null));
 const WoTHelpers = new Helpers(servient);
 
-const fetchUrl = "http://localhost:8080/counter?hash=d48a582886dd7d5ce803c0f34301a68c2e097fafc5becd3f8003781af0bca760"
+// Credit to W3C
+const thingDescription = {
+    "@context": "https://www.w3.org/2022/wot/td/v1.1",
+    "id": "did:web:phamkv.github.io:things:thing1",
+    "@type": "saref:LightSwitch",
+    "title": "MyLampThing",
+    "securityDefinitions": {
+        "basic_sc": {"scheme": "basic", "in": "header"},
+        "nosec_sc": {"scheme": "nosec"},
+    },
+    "security": "nosec_sc",
+    "properties": {
+        "status": {
+            "type": "string",
+            "forms": [{"href": "https://mylamp.example.com/status"}]
+        }
+    },
+    "actions": {
+        "toggle": {
+            "forms": [{"href": "https://mylamp.example.com/toggle"}]
+        }
+    },
+    "events": {
+        "overheating": {
+            "data": {"type": "string"},
+            "forms": [{
+                "href": "https://mylamp.example.com/oh",
+                "subprotocol": "longpoll"
+            }]
+        }
+    }
+}
 
-WoTHelpers.fetch(fetchUrl).then(async (td) => {
+WoTHelpers.fetch("http://localhost:8080/counter").then(async (td) => {
     try {
-        servient.start().then(async (WoT) => {
-            // Then from here on you can consume the thing
-            // i.e let thing = await WoT.consume(td) ...
-            const thing = await WoT.consume(td);
-            console.info("=== TD ===");
-            console.info(td);
-            console.info("==========");
+        const WoT = await servient.start();
+        // Then from here on you can consume the thing
+        let thing = await WoT.consume(thingExample);
+        console.info("=== TD ===");
+        console.info(td);
+        console.info("==========");
 
-            // read property #1
-            const read1 = await thing.readProperty("count");
-            console.log("count value is", await read1.value());
-        });
-
-        hashlink.verifyObject(fetchUrl)
+        // read property #1
+        const read1 = await thing.readProperty("count");
+        console.log("count value is", await read1.value());
     }
     catch (err) {
         console.error("Script error:", err);
