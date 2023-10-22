@@ -5,17 +5,17 @@ import axios from "axios";
 import { MessageClient } from "../utils/comm/commMessage.js";
 import { THING1_SECRETS } from "../utils/comm/test-vectors.js";
 import { discloseClaims } from "../utils/sd-jwt/disclose-claims.js";
+import { startThingExample } from "../utils/wot/wot.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.resolve(__filename, "..");
 
 const DIDSender = "did:web:phamkv.github.io:things:thing1"
-const DIDReceiver = "did:web:phamkv.github.io:service:discovery"
 const sdJwt = fs.readFileSync(path.resolve(__dirname, "sd-jwt-test.json"), 'utf8');
 
 const messageClient = new MessageClient(DIDSender, THING1_SECRETS)
 
-async function registerThing() {
+async function registerThing(DIDReceiver) {
   try {
     // Step 1: Make the first request and await its response
     const response1 = await axios.get('http://localhost:3000/registration');
@@ -66,4 +66,6 @@ async function registerThing() {
   }
 }
 
-registerThing();
+const tddDID = "did:web:phamkv.github.io:service:discovery"
+await registerThing(tddDID);
+startThingExample();

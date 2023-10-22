@@ -5,6 +5,7 @@ import axios from "axios";
 import { MessageClient } from "../utils/comm/commMessage.js";
 import { THING2_SECRETS } from "../utils/comm/test-vectors.js";
 import { discloseClaims } from "../utils/sd-jwt/disclose-claims.js";
+import { retrieveUrlFromTD, wotThingExample } from "../utils/wot/wot-client.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.resolve(__filename, "..");
@@ -85,5 +86,7 @@ const thingDescriptions = await queryProtocolPresentationExchange(issuer1DID, 'h
 console.log(thingDescriptions)
 // Consume TD and send test request to Thing1
 const thingDescription = thingDescriptions[0]
+const thingUrl = retrieveUrlFromTD(thingDescription)
+wotThingExample(thingUrl)
 
 // TODO retrieving service endpoint from DIDDoc, then retrieving api endpoint using discover feature protocol

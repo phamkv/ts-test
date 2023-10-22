@@ -26,8 +26,26 @@ function parseJwt (token) {
 
 const tdStorage = {
   "did:web:phamkv.github.io:things:thing1": {
-    id: "did:web:phamkv.github.io:things:thing1",
-    title: "MyLightSwitch"
+    "@context": "https://www.w3.org/2022/wot/td/v1.1",
+    "@type": "saref:LightSwitch",
+    "id": "did:web:phamkv.github.io:things:thing1",
+    "title": "MyLampThing",
+    "securityDefinitions": {
+        "nosec_sc": {"scheme": "nosec"}
+    },
+    "security": "nosec_sc",
+    "properties": {
+        "status": {
+            "type": "string",
+            "forms": [{"href": "http://localhost:8080/lightswitch/properties/status"}]
+        }
+    },
+    "actions": {
+        "toggle": {
+            "forms": [{"href": "http://localhost:8080/lightswitch/actions/toggle"}]
+        }
+    },
+    "events": {}
   }
 } // Simple hashmap storage for demo
 const retrieveThingDescriptions = async (dids) => { // stub for retrieving
