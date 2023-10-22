@@ -2,6 +2,7 @@ import fs from "fs"
 import {fileURLToPath} from 'url';
 import path from "path"
 import axios from "axios";
+import https from "https"
 import { MessageClient } from "../utils/comm/commMessage.js";
 import { THING2_SECRETS } from "../utils/comm/test-vectors.js";
 import { discloseClaims } from "../utils/sd-jwt/disclose-claims.js";
@@ -9,6 +10,10 @@ import { retrieveUrlFromTD, wotThingExample } from "../utils/wot/wot-client.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.resolve(__filename, "..");
+
+// ONLY FOR DEMO / DEVELOPMENT PURPOSES
+const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+const instance = axios.create({ httpsAgent })
 
 const DIDSender = "did:web:phamkv.github.io:things:thing2"
 const sdJwt = fs.readFileSync(path.resolve(__dirname, "sd-jwt-test.json"), 'utf8');
@@ -18,7 +23,7 @@ const messageClient = new MessageClient(DIDSender, THING2_SECRETS)
 async function queryProtocolPresentationExchange(DIDReceiver, serviceEndpoint, bodyPayload) {
   try {
     // Retrieve Presentation Definition (Protocol)
-    const response1 = await axios.get(serviceEndpoint);
+    const response1 = await instance.get(serviceEndpoint);
     const definition = response1.data;
     console.log('Step 1 response:', definition);
 
@@ -55,7 +60,7 @@ async function queryProtocolPresentationExchange(DIDReceiver, serviceEndpoint, b
 
     // Send DIDMessage
     const bodyMessage = await messageClient.createMessage(DIDReceiver, obj)
-    const response2 = await axios.post(serviceEndpoint, bodyMessage, {
+    const response2 = await instance.post(serviceEndpoint, bodyMessage, {
       headers: {
         'content-type': 'application/didcomm-encrypted+json'
       },
@@ -73,7 +78,7 @@ const payload1 = {
   types: ["saref:LightSwitch", "saref:Light", "saref:LightingDevice"]
 }
 const tddDID = "did:web:phamkv.github.io:service:discovery"
-const things = await queryProtocolPresentationExchange(tddDID, 'http://localhost:3000/query', payload1).then(msg => msg.body.query)
+const things = await queryProtocolPresentationExchange(tddDID, 'https://localhost:3000/query', payload1).then(msg => msg.body.query)
 //const things = [{id: "did:web:phamkv.github.io:things:thing1"}]
 
 console.log(things)
@@ -81,7 +86,7 @@ console.log(things)
 const thingInfo = {dids: [things[0].id]}
 console.log(thingInfo)
 const issuer1DID = "did:web:phamkv.github.io:issuer:manufacturer1"
-const thingDescriptions = await queryProtocolPresentationExchange(issuer1DID, 'http://localhost:4000/thingDescription', thingInfo).then(msg => msg.body.thingDescriptions)
+const thingDescriptions = await queryProtocolPresentationExchange(issuer1DID, 'https://localhost:4000/thingDescription', thingInfo).then(msg => msg.body.thingDescriptions)
 
 console.log(thingDescriptions)
 // Consume TD and send test request to Thing1

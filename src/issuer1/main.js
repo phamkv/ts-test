@@ -1,4 +1,5 @@
 import express from 'express'
+import https from "https"
 import bodyParser from "body-parser"
 import jp from "jsonpath"
 import fs from "fs"
@@ -13,6 +14,13 @@ import * as createSdJwt from "./create-sdjwt.js"
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.resolve(__filename, "..");
 const outPath = path.resolve(__dirname, "../thing1/sd-jwt-test.json")
+
+const app = express();
+const port = 4000;
+// HTTPS Cert
+const key = fs.readFileSync(path.resolve(__dirname, "./key.pem"));
+const cert = fs.readFileSync(path.resolve(__dirname, "./cert.pem"));
+const server = https.createServer({key: key, cert: cert }, app);
 
 if (!fs.existsSync(outPath)) {
   createSdJwt.main(outPath)
@@ -58,9 +66,6 @@ const retrieveThingDescriptions = async (dids) => { // stub for retrieving
 
 const DIDSender = "did:web:phamkv.github.io:issuer:manufacturer1"
 const messageClient = new MessageClient(DIDSender, ISS1_SECRETS)
-
-const app = express();
-const port = 4000;
 
 app.use(express.json());
 app.use(bodyParser.text({ type: 'application/didcomm-encrypted+json' }));
@@ -180,7 +185,7 @@ app.post('/thingDescription', (req, res, next) => {
   }
 });
 
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Thing Description Directory is listening at http://localhost:${port}`);
 });
 

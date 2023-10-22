@@ -1,4 +1,5 @@
 import express from 'express'
+import https from "https"
 import bodyParser from "body-parser"
 import jp from "jsonpath"
 import fs from "fs"
@@ -9,8 +10,15 @@ import { TDD_SECRETS } from "../utils/comm/test-vectors.js";
 import { verifySdJwt } from '../utils/sd-jwt/verify-sd-jwt.js';
 import { resolvePublicKeyWeb } from '../utils/comm/didweb.js';
 
+const app = express();
+const port = 3000;
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.resolve(__filename, "..");
+// HTTPS Cert
+const key = fs.readFileSync(path.resolve(__dirname, "./key.pem"));
+const cert = fs.readFileSync(path.resolve(__dirname, "./cert.pem"));
+const server = https.createServer({key: key, cert: cert }, app);
 
 function parseJwt (token) {
   return JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
@@ -34,9 +42,6 @@ const queryThings = (types) => { // stub for querying
 
 const DIDSender = "did:web:phamkv.github.io:service:discovery"
 const messageClient = new MessageClient(DIDSender, TDD_SECRETS)
-
-const app = express();
-const port = 3000;
 
 app.use(express.json());
 app.use(bodyParser.text({ type: 'application/didcomm-encrypted+json' }));
@@ -110,7 +115,7 @@ const verifyCredential = async (encryptedMessage, jspath) => {
         if (jp.query(cred, path).length < 1 ) {
           const obj = { body: "Credential does not have the required attributes" }
           const sending = await messageClient.createMessage(msg.from, obj)
-          throw sending
+          throw sending // change this
         }
       } catch (error) {
         console.log(error)
@@ -150,15 +155,7 @@ app.post('/registration', (req, res, next) => {
       ...cred.disclosed
     }
     registerThing(thingDescription)
-    const obj = {
-      body: {
-        status: "202",
-        stored: {...thingDescription}
-      }
-    }
-
-    const sending = await messageClient.createMessage(msg.from, obj)
-    res.send(sending)
+    res.sendStatus(202)
   } catch (error) {
     console.log(error)
     res.send(error)
@@ -195,6 +192,6 @@ app.all('/query', (req, res, next) => {
   res.send(sending)
 });
 
-app.listen(port, () => {
-  console.log(`Thing Description Directory is listening at http://localhost:${port}`);
+server.listen(port, () => {
+  console.log(`Thing Description Directory is listening at https://localhost:${port}`);
 });
