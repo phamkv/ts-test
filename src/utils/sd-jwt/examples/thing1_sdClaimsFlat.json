@@ -5,7 +5,7 @@
   "title": "MyLampThing",
   "securityDefinitions": "{\"basic_sc\": {\"scheme\": \"basic\", \"in\":\"header\"},{\"nosec_sc\": {\"scheme\": \"nosec\"},}",
   "security": "nosec_sc",
-  "properties": "{\"status\": {\"type\": \"string\",\"forms\": [{\"href\":\"http://localhost:8080/lightswitch/status\"}]}}",
-  "actions": "{\"toggle\": {\"forms\": [{\"href\": \"http://localhost:8080/lightswitch/toggle\"}]}}",
+  "properties": "{\"status\": {\"type\": \"string\",\"forms\": [{\"href\":\"http://localhost:8080/lightswitch/properties/status\"}]}}",
+  "actions": "{\"toggle\": {\"forms\": [{\"href\": \"http://localhost:8080/lightswitch/actions/toggle\"}]}}",
   "events": "{}"
 }
