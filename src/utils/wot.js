@@ -1,14 +1,12 @@
-// server.js
 // Required steps to create a servient for creating a thing
 import { Servient } from "@node-wot/core"
 import httpBinding from "@node-wot/binding-http"
-import * as hashlink from "./hashlink.js"
 const HttpServer = httpBinding.HttpServer
 
 const servient = new Servient();
 servient.addServer(new HttpServer());
 
-servient.start().then(async (WoT) => {
+servient.start().then( async (WoT) => {
     /********************************************************************************
      * Copyright (c) 2023 Contributors to the Eclipse Foundation
      *
@@ -23,8 +21,7 @@ servient.start().then(async (WoT) => {
      *
      * SPDX-License-Identifier: EPL-2.0 OR W3C-20150513
      ********************************************************************************/
-
-    // Then from here on you can use the WoT object to produce the thing
+    // Configured for demo purposes
     let status = 0;
     const exposingThing = await WoT.produce({
         title: "LightSwitch",
@@ -46,15 +43,13 @@ servient.start().then(async (WoT) => {
     })
     exposingThing.setPropertyReadHandler("status", () => { return status; });
     exposingThing.setActionHandler("toggle", () => { 
-        count++; 
-        exposingThing.emitPropertyChange("status"); 
-    });
+        status = status === 1 ? 0 : 1;
+        console.log(status)
+        exposingThing.emitPropertyChange("status"); });
     await exposingThing.expose();
+
     console.log(`Produced ${exposingThing.getThingDescription()}`);
     console.log(exposingThing.getThingDescription())
-
     console.log(`http://localhost:8080/${exposingThing.title.toLowerCase()}`)
-    
-    // const hl = await hashlink.createHashlink(`http://localhost:8080/${exposingThing.title.toLowerCase()}`)
-    // console.log(hl)
+    // now you can interact with the thing via http://localhost:8080/lightswitch
 });
