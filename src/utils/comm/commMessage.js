@@ -42,9 +42,11 @@ export class MessageClient {
     this.secretsResolver = new ExampleSecretsResolver(clientSecret);
   }
 
-  async createMessage(recipientDID, message) {
-    message.id = String(Math.floor(Math.random() * 10000))
-    message.type = "application/didcomm-plain+json"
+  async createMessage(recipientDID, message, protocol = "https://identity.foundation/presentation-exchange/spec/v2.0.0") {
+    if (!("id" in message)) {
+      message.id = String(Math.floor(Math.random() * 10000))
+    } 
+    message.type = protocol
     message.from = this.clientDID
     message.to = [recipientDID]
     if (!("body" in message)) {

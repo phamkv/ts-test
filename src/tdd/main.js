@@ -1,4 +1,5 @@
 import express from 'express'
+import axios from 'axios'
 import https from "https"
 import bodyParser from "body-parser"
 import jp from "jsonpath"
@@ -12,6 +13,10 @@ import { resolvePublicKeyWeb } from '../utils/comm/didweb.js';
 
 const app = express();
 const port = 3000;
+
+// ONLY FOR DEMO / DEVELOPMENT PURPOSES
+const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+const instance = axios.create({ httpsAgent })
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.resolve(__filename, "..");
@@ -155,7 +160,7 @@ app.post('/registration', (req, res, next) => {
       ...cred.disclosed
     }
     registerThing(thingDescription)
-    res.sendStatus(202)
+    res.sendStatus(202) // Succesfully Verified
   } catch (error) {
     console.log(error)
     res.send(error)
@@ -180,16 +185,22 @@ app.all('/query', (req, res, next) => {
   const { cred, msg } = await verifyCredential(req.body, jspath)
   //console.log(cred)
   //console.log(msg)
+  res.sendStatus(202) // Succesfully Verified
   const things = queryThings(msg.body["types"])
   const obj = {
+    id: msg.id,
     body: {
-      status: "202",
       query: things
     }
   }
 
   const sending = await messageClient.createMessage(msg.from, obj)
-  res.send(sending)
+  const endpoint = "https://localhost:4001/"
+  instance.post(endpoint, sending, {
+    headers: {
+      'content-type': 'application/didcomm-encrypted+json'
+    },
+  });
 });
 
 server.listen(port, () => {
