@@ -5,7 +5,7 @@
   "title": "MyLampThing",
   "securityDefinitions": "{\"basic_sc\": {\"scheme\": \"basic\", \"in\":\"header\"},{\"nosec_sc\": {\"scheme\": \"nosec\"},}",
   "security": "nosec_sc",
-  "properties": "{\"status\": {\"type\": \"string\",\"forms\": [{\"href\":\"https://mylamp.example.com/status\"}]}}",
-  "actions": "{\"toggle\": {\"forms\": [{\"href\": \"https://mylamp.example.comtoggle\"}]}}",
-  "events": "{\"overheating\": {\"data\": {\"type\": \"string\"},\"forms\": [{\"href\": \"https://mylamp.example.com/oh\",\"subprotocol\": \"longpoll\"}]}}"
+  "properties": "{\"status\": {\"type\": \"string\",\"forms\": [{\"href\":\"http://localhost:8080/lightswitch/status\"}]}}",
+  "actions": "{\"toggle\": {\"forms\": [{\"href\": \"http://localhost:8080/lightswitch/toggle\"}]}}",
+  "events": "{}"
 }
