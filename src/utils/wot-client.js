@@ -44,18 +44,23 @@ const thingDescription = {
     }
 }
 
-WoTHelpers.fetch("http://localhost:8080/counter").then(async (td) => {
+WoTHelpers.fetch("http://localhost:8080/lightswitch").then(async (td) => {
     try {
         const WoT = await servient.start();
         // Then from here on you can consume the thing
-        let thing = await WoT.consume(thingExample);
+        let thing = await WoT.consume(td);
         console.info("=== TD ===");
-        console.info(td);
+        console.info(thing);
         console.info("==========");
 
-        // read property #1
-        const read1 = await thing.readProperty("count");
-        console.log("count value is", await read1.value());
+        // read property
+        const read1 = await thing.readProperty("status");
+        console.log("switch value is", await read1.value());
+
+        // toggle property
+        await thing.invokeAction("toggle");
+        const read2 = await thing.readProperty("status");
+        console.log("switch value is", await read2.value());
     }
     catch (err) {
         console.error("Script error:", err);

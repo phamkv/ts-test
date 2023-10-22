@@ -25,27 +25,30 @@ servient.start().then(async (WoT) => {
      ********************************************************************************/
 
     // Then from here on you can use the WoT object to produce the thing
-    let count = 0;
+    let status = 0;
     const exposingThing = await WoT.produce({
-        title: "Counter",
+        title: "LightSwitch",
         id: "did:web:phamkv.github.io:things:thing1",
-        description: "A simple counter thing",
+        description: "A simple light switch thing",
         properties: {
-            count: {
+            status: {
                 type: "integer",
-                description: "current counter value",
+                description: "current switch value (on = 1/off = 0)",
                 observable: true,
                 readOnly: true
             }
         },
         actions: {
-            increment: {
-                description: "increment counter value",
+            toggle: {
+                description: "toggle switch value (on = 1/off = 0)",
             }
         }
     })
-    exposingThing.setPropertyReadHandler("count", () => { return count; });
-    exposingThing.setActionHandler("increment", () => { count++; exposingThing.emitPropertyChange("count"); });
+    exposingThing.setPropertyReadHandler("status", () => { return status; });
+    exposingThing.setActionHandler("toggle", () => { 
+        count++; 
+        exposingThing.emitPropertyChange("status"); 
+    });
     await exposingThing.expose();
     console.log(`Produced ${exposingThing.getThingDescription()}`);
     console.log(exposingThing.getThingDescription())
