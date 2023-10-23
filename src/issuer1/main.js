@@ -179,8 +179,33 @@ app.get('/statuslists/:id', (req, res) => {
   res.send(statusList)
 });
 
+// Status List(s) of Issuer
+app.get('/deleteThing1', async (req, res) => {
+  try {
+    const obj = {
+      body: {
+        method: "TDDDeletion",
+        things: ["did:web:phamkv.github.io:things:thing1"]
+      }
+    }
+
+    const sending = await messageClient.createMessage("did:web:phamkv.github.io:service:discovery", obj)
+    const endpoint = "https://localhost:3000/"
+    const response = await instance.post(endpoint, sending, {
+      headers: {
+        'content-type': 'application/didcomm-encrypted+json'
+      },
+    });
+    console.log(response.data)
+    res.send("Please check the consoles")
+  } catch(error) {
+    res.sendStatus(500)
+  }
+});
+
 server.listen(port, () => {
   console.log(`Issuer1 is listening at https://localhost:${port}`);
+  console.log(`For DEMO: The entry of Thing1 in the TDD can be deleted using this RPC: https://localhost:${port}/deleteThing1`)
 });
 
 // TODO: Revocation and deletion of ThingInfo in TDD

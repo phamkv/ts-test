@@ -46,6 +46,13 @@ const queryThings = (types) => { // stub for querying
   return filteredThings;
 }
 
+const deleteThing = (thingId) => { // stub for deletion
+  if (tdStorage[thingId]) {
+    console.log(`Deleting ${thingId}...`)
+    delete tdStorage[thingId]
+  }
+}
+
 const DIDSender = "did:web:phamkv.github.io:service:discovery"
 const messageClient = new MessageClient(DIDSender, TDD_SECRETS)
 
@@ -79,6 +86,14 @@ const verifyCredential = async (encryptedMessage) => {
     const msg = await messageClient.unpackMessage(encryptedMessage)
     // console.log(msg)
     const presentationSubmission = msg.presentation_submission
+    console.log(presentationSubmission)
+    console.log(msg)
+    if (!presentationSubmission && msg.body.method === "TDDDeletion") {
+      return {
+        cred: {},
+        msg: msg
+      }
+    }
     const verfiableCredentials = presentationSubmission.descriptor_map.map(vc => jp.query(msg, vc.path)[0])
     // console.log(verfiableCredentials)
     const sdJwt = verfiableCredentials[0].payload
@@ -109,11 +124,6 @@ const verifyCredential = async (encryptedMessage) => {
         // TODO: revocation key
       ]
     } else if (msg.body.method === "TDDQuery") {
-      jspath = [
-        "$.jwt.iss",
-        "$.disclosed.id"
-      ]
-    } else if (msg.body.method === "TDDDeletion") {
       jspath = [
         "$.jwt.iss",
         "$.disclosed.id"
@@ -166,7 +176,10 @@ const processMessage = async (unpacked, res) => {
         },
       });
     } else if (msg.body.method === "TDDDeletion") {
-      //
+      for (const thingId of msg.body.things) {
+        deleteThing(thingId)
+      }
+      res.sendStatus(202)
     } else {
       return
     }
