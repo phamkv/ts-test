@@ -52,6 +52,142 @@ app.use(express.json());
 app.use(bodyParser.text({ type: 'application/didcomm-encrypted+json' }));
 app.use(bodyParser.json({ type: 'discover-features/query' }));
 
+const verifyCredential = async (encryptedMessage) => {
+  try {
+    // Handle Registration (sd-jwt verification and storing)
+    const msg = await messageClient.unpackMessage(encryptedMessage)
+    // console.log(msg)
+    const presentationSubmission = msg.presentation_submission
+    const verfiableCredentials = presentationSubmission.descriptor_map.map(vc => jp.query(msg, vc.path)[0])
+    // console.log(verfiableCredentials)
+    const sdJwt = verfiableCredentials[0].payload
+
+    const jwksBytes = await resolvePublicKeyWeb(parseJwt(sdJwt).iss)
+
+    const rv = await verifySdJwt(sdJwt, jwksBytes)
+    const cred = {
+      jwt: JSON.parse(rv.jwt),
+      disclosed: JSON.parse(rv.disclosed)
+    }
+
+    let jspath
+    if (msg.body.method === "TDDRegistration") {
+      jspath = [
+        "$.jwt.iss",
+        "$.disclosed.id",
+        "$.disclosed.title",
+        "$.disclosed['@type']",
+        "$.disclosed.security"
+        // TODO: revocation key
+      ]
+    } else if (msg.body.method === "TDDQuery") {
+      jspath = [
+        "$.jwt.iss",
+        "$.disclosed.id"
+      ]
+    } else if (msg.body.method === "TDDDeletion") {
+      jspath = [
+        "$.jwt.iss",
+        "$.disclosed.id"
+      ]
+    } else {
+      let jspath = []
+    }
+
+    for (let path of jspath) {
+      try {
+        if (jp.query(cred, path).length < 1 ) {
+          throw "Credential does not have the required attributes"
+        }
+      } catch (error) {
+        console.log(error)
+        throw error
+      }
+    }
+    return { cred, msg }
+  } catch (error) {
+    throw error
+  }
+}
+
+const processMessage = async (unpacked, res) => {
+  const { cred, msg } = unpacked
+  try {
+    if (msg.body.method === "TDDRegistration") {
+      const thingDescription = {
+        iss: cred.jwt.iss,
+        ...cred.disclosed
+      }
+      registerThing(thingDescription)
+      res.sendStatus(202)
+    } else if (msg.body.method === "TDDQuery") {
+      const things = queryThings(msg.body["types"])
+      const obj = {
+        id: msg.id,
+        body: {
+          query: things
+        }
+      }
+    
+      res.sendStatus(202)
+      const sending = await messageClient.createMessage(msg.from, obj)
+      const endpoint = "https://localhost:4001/"
+      instance.post(endpoint, sending, {
+        headers: {
+          'content-type': 'application/didcomm-encrypted+json'
+        },
+      });
+    } else if (msg.body.method === "TDDDeletion") {
+      //
+    } else {
+      return
+    }
+  } catch(error) {
+    res.sendStatus(500)
+  }
+}
+
+// DIDComm Presentation Submission for Registration
+app.post('/', (req, res, next) => {
+  const contentType = req.headers['content-type'];
+  console.log(contentType)
+  if (contentType !== 'application/didcomm-encrypted+json')
+    return res.status(415).send('Unsupported Media Type');
+  next();
+}, async (req, res) => {
+  try {
+    // console.log(req)
+    const unpacked = await verifyCredential(req.body)
+    // console.log(cred)
+    // console.log(msg)
+    // Credential verified and valid according to the presentation definition
+    // Registration will be processed now
+    processMessage(unpacked, res)
+  } catch (error) {
+    console.log(error)
+    res.send(error)
+  }
+});
+
+// Presentation Request for Registration
+app.get('/TDDRegistration', (req, res) => {
+  const sdJwt = fs.readFileSync(path.resolve(__dirname, "registration_presentation_definition.json"), 'utf8');
+  res.send(sdJwt)
+});
+
+
+// Presentation Request for TD Query
+app.get('/TDDQuery', (req, res, next) => {
+  const sdJwt = fs.readFileSync(path.resolve(__dirname, "query_presentation_definition.json"), 'utf8');
+  res.send(sdJwt)
+});
+
+server.listen(port, () => {
+  console.log(`Thing Description Directory is listening at https://localhost:${port}`);
+});
+
+
+
 app.get('/', (req, res) => {
   const contentType = req.headers['content-type'];
   console.log(contentType)
@@ -89,120 +225,4 @@ app.get('/', (req, res) => {
   } else {
     res.send("Hello World!")
   }
-});
-
-// Presentation Request for Registration
-app.get('/registration', (req, res) => {
-  const sdJwt = fs.readFileSync(path.resolve(__dirname, "registration_presentation_definition.json"), 'utf8');
-  res.send(sdJwt)
-});
-
-const verifyCredential = async (encryptedMessage, jspath) => {
-  try {
-    // Handle Registration (sd-jwt verification and storing)
-    const msg = await messageClient.unpackMessage(encryptedMessage)
-    // console.log(msg)
-    const presentationSubmission = msg.presentation_submission
-    const verfiableCredentials = presentationSubmission.descriptor_map.map(vc => jp.query(msg, vc.path)[0])
-    // console.log(verfiableCredentials)
-    const sdJwt = verfiableCredentials[0].payload
-
-    const jwksBytes = await resolvePublicKeyWeb(parseJwt(sdJwt).iss)
-
-    const rv = await verifySdJwt(sdJwt, jwksBytes)
-    const cred = {
-      jwt: JSON.parse(rv.jwt),
-      disclosed: JSON.parse(rv.disclosed)
-    }
-
-    for (let path of jspath) {
-      try {
-        if (jp.query(cred, path).length < 1 ) {
-          const obj = { body: "Credential does not have the required attributes" }
-          const sending = await messageClient.createMessage(msg.from, obj)
-          throw sending // change this
-        }
-      } catch (error) {
-        console.log(error)
-        throw error
-      }
-    }
-    return { cred, msg }
-  } catch (error) {
-    throw error
-  }
-}
-
-// DIDComm Presentation Submission for Registration
-app.post('/registration', (req, res, next) => {
-  const contentType = req.headers['content-type'];
-  console.log(contentType)
-  if (contentType !== 'application/didcomm-encrypted+json')
-    return res.status(415).send('Unsupported Media Type');
-  next();
-}, async (req, res) => {
-  try {
-    // console.log(req)
-    const jspath = [
-      "$.jwt.iss",
-      "$.disclosed.id",
-      "$.disclosed.title",
-      "$.disclosed['@type']",
-      "$.disclosed.security"
-    ]
-    const { cred, msg } = await verifyCredential(req.body, jspath)
-    // console.log(cred)
-    // console.log(msg)
-    // Credential verified and valid according to the presentation definition
-    // Registration will be processed now
-    const thingDescription = {
-      iss: cred.jwt.iss,
-      ...cred.disclosed
-    }
-    registerThing(thingDescription)
-    res.sendStatus(202) // Succesfully Verified
-  } catch (error) {
-    console.log(error)
-    res.send(error)
-  }
-});
-
-// Presentation Request for TD Query
-app.all('/query', (req, res, next) => {
-  const contentType = req.headers['content-type'];
-  console.log(contentType)
-  if (contentType !== 'application/didcomm-encrypted+json') {
-    const sdJwt = fs.readFileSync(path.resolve(__dirname, "query_presentation_definition.json"), 'utf8');
-    return res.send(sdJwt)
-  }
-  next();
-}, async (req, res) => {
-  // Handle Query Request (sd-jwt verification and querying)
-  const jspath = [
-    "$.jwt.iss",
-    "$.disclosed.id"
-  ]
-  const { cred, msg } = await verifyCredential(req.body, jspath)
-  //console.log(cred)
-  //console.log(msg)
-  res.sendStatus(202) // Succesfully Verified
-  const things = queryThings(msg.body["types"])
-  const obj = {
-    id: msg.id,
-    body: {
-      query: things
-    }
-  }
-
-  const sending = await messageClient.createMessage(msg.from, obj)
-  const endpoint = "https://localhost:4001/"
-  instance.post(endpoint, sending, {
-    headers: {
-      'content-type': 'application/didcomm-encrypted+json'
-    },
-  });
-});
-
-server.listen(port, () => {
-  console.log(`Thing Description Directory is listening at https://localhost:${port}`);
 });

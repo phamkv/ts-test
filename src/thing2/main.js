@@ -40,7 +40,7 @@ let thingDescriptionsIssuer = []
 async function queryProtocolPresentationExchange(DIDReceiver, serviceEndpoint, bodyPayload) {
   try {
     // Retrieve Presentation Definition (Protocol)
-    const response1 = await instance.get(serviceEndpoint);
+    const response1 = await instance.get(serviceEndpoint + bodyPayload.method);
     const definition = response1.data;
     console.log('Step 1 response:', definition);
 
@@ -94,15 +94,16 @@ async function queryProtocolPresentationExchange(DIDReceiver, serviceEndpoint, b
 }
 
 const processMessage = async (msg) => {
-  if (openRequests[msg.id].type === "TDD Request") {
+  if (openRequests[msg.id].method === "TDDQuery") {
     thingDescriptionsTDD = msg.body.query
     console.log(thingDescriptionsTDD)
-  } else if (openRequests[msg.id].type === "Issuer Request") {
+  } else if (openRequests[msg.id].method === "IssuerRequest") {
     thingDescriptionsIssuer = msg.body.thingDescriptions
     console.log(thingDescriptionsIssuer)
   } else {
     return ""
   }
+  printSteps()
 }
 
 // DIDComm Presentation Submission for Retrieval
@@ -125,23 +126,22 @@ app.post('/', (req, res, next) => {
 app.get("/queryDemo", (req, res) => {
   // Retrieve things matching the types from a Thing Description Discovery Service
   const payload1 = {
-    type: "TDD Request",
-    method: "queryThings",
+    method: "TDDQuery",
     types: ["saref:LightSwitch", "saref:Light", "saref:LightingDevice"]
   }
   const tddDID = "did:web:phamkv.github.io:service:discovery"
-  queryProtocolPresentationExchange(tddDID, 'https://localhost:3000/query', payload1)
+  queryProtocolPresentationExchange(tddDID, 'https://localhost:3000/', payload1)
   res.send("Step 1: Please look into the console")
 });
 
 app.get("/issuerRequestDemo", (req, res) => {
   // Retrieve full Thing Description from Issuer
   const thingInfo = {
-    type: "Issuer Request",
+    method: "IssuerRequest",
     dids: [thingDescriptionsTDD[0].id]
   }
   const issuer1DID = "did:web:phamkv.github.io:issuer:manufacturer1"
-  queryProtocolPresentationExchange(issuer1DID, 'https://localhost:4000/thingDescription', thingInfo)
+  queryProtocolPresentationExchange(issuer1DID, 'https://localhost:4000/', thingInfo)
   res.send("Step 2: Please look into the console")
 });
 
@@ -149,15 +149,21 @@ app.get("/thingConsumptionDemo", async (req, res) => {
   // Consume TD and send test request to Thing1
   const thingDescription = thingDescriptionsIssuer[0]
   const thingUrl = retrieveUrlFromTD(thingDescription)
-  wotThingExample(thingUrl)
+  await wotThingExample(thingUrl)
+  printSteps()
   res.send("Step 3: Please look into the console")
 });
 
 server.listen(port, () => {
   console.log(`Thing Description Directory is listening at https://localhost:${port}`);
+  printSteps();
+});
+
+const printSteps = () => {
+  console.log("======Execute the demo by sending the follwing RPCs=======")
   console.log(`Step 1: https://localhost:${port}/queryDemo`);
   console.log(`Step 2: https://localhost:${port}/issuerRequestDemo`);
   console.log(`Step 3: https://localhost:${port}/thingConsumptionDemo`);
-});
+}
 
 // TODO retrieving service endpoint from DIDDoc, then retrieving api endpoint using discover feature protocol

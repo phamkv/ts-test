@@ -23,7 +23,7 @@ const messageClient = new MessageClient(DIDSender, THING1_SECRETS)
 async function registerThing(url, DIDReceiver) {
   try {
     // Step 1: Make the first request and await its response
-    const response1 = await instance.get(url);
+    const response1 = await instance.get(url + "TDDRegistration");
     const definition = response1.data;
     console.log('Step 1 response:', definition);
 
@@ -54,6 +54,10 @@ async function registerThing(url, DIDReceiver) {
             path: "$.verifiable_credential[0]"
           }
         ]
+      },
+      body: {
+        method: "TDDRegistration",
+        types: ["saref:LightSwitch", "saref:Light", "saref:LightingDevice"]
       }
     }
 
@@ -71,5 +75,5 @@ async function registerThing(url, DIDReceiver) {
 }
 
 const tddDID = "did:web:phamkv.github.io:service:discovery"
-await registerThing('https://localhost:3000/registration', tddDID);
+await registerThing('https://localhost:3000/', tddDID);
 startThingExample();

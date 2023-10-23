@@ -74,7 +74,7 @@ const retrieveThingDescriptions = async (dids) => { // stub for retrieving
   return result;
 }
 
-const verifyCredential = async (encryptedMessage, jspath) => {
+const verifyCredential = async (encryptedMessage) => {
   try {
     // Handle Registration (sd-jwt verification and storing)
     const msg = await messageClient.unpackMessage(encryptedMessage)
@@ -92,12 +92,21 @@ const verifyCredential = async (encryptedMessage, jspath) => {
       disclosed: JSON.parse(rv.disclosed)
     }
 
+    let jspath
+    if (msg.body.method === "IssuerRequest") {
+      jspath = [
+        "$.jwt.iss",
+        "$.disclosed.id",
+        "$.disclosed['@type']"
+      ]
+    } else {
+      jspath = []
+    }
+
     for (let path of jspath) {
       try {
         if (jp.query(cred, path).length < 1 ) {
-          const obj = { body: "Credential does not have the required attributes" }
-          const sending = await messageClient.createMessage(msg.from, obj)
-          throw sending
+          throw "Credential does not have the required attributes"
         }
       } catch (error) {
         console.log(error)
@@ -110,14 +119,42 @@ const verifyCredential = async (encryptedMessage, jspath) => {
   }
 }
 
+const processMessage = async (unpacked, res) => {
+  const { cred, msg } = unpacked
+  try {
+    if (msg.body.method === "IssuerRequest") {
+      const thingDescriptions = await retrieveThingDescriptions(msg.body.dids)
+      const obj = {
+        id: msg.id,
+        body: {
+          thingDescriptions: thingDescriptions
+        }
+      }
+      res.sendStatus(202) // Succesfully Verified
+
+      const sending = await messageClient.createMessage(msg.from, obj)
+      const endpoint = "https://localhost:4001/"
+      instance.post(endpoint, sending, {
+        headers: {
+          'content-type': 'application/didcomm-encrypted+json'
+        },
+      });
+    } else {
+      return
+    }
+  } catch(error) {
+    res.sendStatus(500)
+  }
+}
+
 // Presentation Request for Registration
-app.get('/thingDescription', (req, res) => {
+app.get('/IssuerRequest', (req, res) => {
   const sdJwt = fs.readFileSync(path.resolve(__dirname, "thingDescription_presentation_definition.json"), 'utf8');
   res.send(sdJwt)
 });
 
 // DIDComm Presentation Submission for Retrieval
-app.post('/thingDescription', (req, res, next) => {
+app.post('/', (req, res, next) => {
   const contentType = req.headers['content-type'];
   console.log(contentType)
   if (contentType !== 'application/didcomm-encrypted+json')
@@ -125,41 +162,27 @@ app.post('/thingDescription', (req, res, next) => {
   next();
 }, async (req, res) => {
   try {
-    const jspath = [
-      "$.jwt.iss",
-      "$.disclosed.id",
-      "$.disclosed['@type']"
-    ]
-    const { cred, msg } = await verifyCredential(req.body, jspath)
+    const unpacked = await verifyCredential(req.body)
     // Credential verified and valid according to the presentation definition
     // Retrieval will be processed now
-    const thingDescriptions = await retrieveThingDescriptions(msg.body.dids)
-
-    res.sendStatus(202) // Succesfully Verified
-    const obj = {
-      id: msg.id,
-      body: {
-        thingDescriptions: thingDescriptions
-      }
-    }
-
-    const sending = await messageClient.createMessage(msg.from, obj)
-    const endpoint = "https://localhost:4001/"
-    instance.post(endpoint, sending, {
-      headers: {
-        'content-type': 'application/didcomm-encrypted+json'
-      },
-    });
+    processMessage(unpacked, res)
   } catch (error) {
     console.log(error)
     res.send(error)
   }
 });
 
+// Status List(s) of Issuer
+app.get('/statuslists/:id', (req, res) => {
+  const id = req.params.id;
+
+  const sdJwt = fs.readFileSync(path.resolve(__dirname, "thingDescription_presentation_definition.json"), 'utf8');
+  res.send(sdJwt)
+});
+
 server.listen(port, () => {
   console.log(`Thing Description Directory is listening at http://localhost:${port}`);
 });
-
 
 // TODO: Revocation and deletion of ThingInfo in TDD
 
