@@ -10,5 +10,9 @@
   ],
   "iss": "did:web:phamkv.github.io:issuer:manufacturer1",
   "iat": 1683000000,
-  "exp": 1883000000
+  "exp": 1883000000,
+  "status": {
+    "idx": 1,
+    "uri": "https://localhost:4000/statuslists/1"
+  }
 }

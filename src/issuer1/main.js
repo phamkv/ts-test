@@ -175,13 +175,12 @@ app.post('/', (req, res, next) => {
 // Status List(s) of Issuer
 app.get('/statuslists/:id', (req, res) => {
   const id = req.params.id;
-
-  const sdJwt = fs.readFileSync(path.resolve(__dirname, "thingDescription_presentation_definition.json"), 'utf8');
-  res.send(sdJwt)
+  const statusList = fs.readFileSync(path.resolve(__dirname, `status_list${id}.txt`), 'utf8');
+  res.send(statusList)
 });
 
 server.listen(port, () => {
-  console.log(`Thing Description Directory is listening at http://localhost:${port}`);
+  console.log(`Issuer1 is listening at https://localhost:${port}`);
 });
 
 // TODO: Revocation and deletion of ThingInfo in TDD

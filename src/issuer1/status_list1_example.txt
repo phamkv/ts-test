@@ -1,0 +1,17 @@
+{
+  "typ": "statuslist+jwt",
+  "alg": "ES256",
+  "kid": "11"
+}
+.
+{
+  "iss": "https://localhost:4000/",
+  "sub": "https://localhost:4000/statuslists/1",
+  "iat": 1683560915,
+  "status_list": {
+    "bits": 1,
+    "lst": "H4sIAMo_jGQC_9u5GABc9QE7AgAAAA"
+  }
+}
+
+ewogICJ0eXAiOiAic3RhdHVzbGlzdCtqd3QiLAogICJhbGciOiAiRVMyNTYiLAogICJraWQiOiAiMTEiCn0K.ewogICJpc3MiOiAiaHR0cHM6Ly9sb2NhbGhvc3Q6NDAwMC8iLAogICJzdWIiOiAiaHR0cHM6Ly9sb2NhbGhvc3Q6NDAwMC9zdGF0dXNsaXN0cy8xIiwKICAiaWF0IjogMTY4MzU2MDkxNSwKICAic3RhdHVzX2xpc3QiOiB7CiAgICAiYml0cyI6IDEsCiAgICAibHN0IjogIkg0c0lBTW9fakdRQ185dTVHQUJjOVFFN0FnQUFBQSIKICB9Cn0=

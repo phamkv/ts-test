@@ -69,11 +69,18 @@ async function registerThing(url, DIDReceiver) {
       },
     });
     console.log('Step 2 response:', response2.data);
+    return response2
   } catch (error) {
     console.error('An error occurred:', error);
   }
 }
 
-const tddDID = "did:web:phamkv.github.io:service:discovery"
-await registerThing('https://localhost:3000/', tddDID);
-startThingExample();
+try{
+  const tddDID = "did:web:phamkv.github.io:service:discovery"
+  const response = await registerThing('https://localhost:3000/', tddDID);
+  if (response.status === 202) {
+    startThingExample();
+  }
+} catch (error) {
+  // console.log(error)
+}

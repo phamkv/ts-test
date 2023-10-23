@@ -10,6 +10,7 @@ import { MessageClient } from "../utils/comm/commMessage.js";
 import { TDD_SECRETS } from "../utils/comm/test-vectors.js";
 import { verifySdJwt } from '../utils/sd-jwt/verify-sd-jwt.js';
 import { resolvePublicKeyWeb } from '../utils/comm/didweb.js';
+import { statusListBaseToBitArray, getStatusCode } from '../utils/statusList.js'
 
 const app = express();
 const port = 3000;
@@ -52,6 +53,26 @@ app.use(express.json());
 app.use(bodyParser.text({ type: 'application/didcomm-encrypted+json' }));
 app.use(bodyParser.json({ type: 'discover-features/query' }));
 
+const verifyStatus = async (cred) => {
+  const uri = cred.jwt.status.uri
+  const response = await instance.get(uri)
+  const statusListJwt = parseJwt(response.data)
+
+  const { bits, lst } = statusListJwt.status_list
+  const bitArray = statusListBaseToBitArray(lst)
+  const statusCode = getStatusCode(bitArray, cred.jwt.status.idx, bits)
+  // console.log(statusCode)
+  if (statusCode === 0) {
+    console.log("Credential Status valid")
+    return true
+  } else if (statusCode === 1) {
+    // console.log("Credential Status invalid")
+    return false
+  } else {
+    return true // further cases can be handled here
+  }
+}
+
 const verifyCredential = async (encryptedMessage) => {
   try {
     // Handle Registration (sd-jwt verification and storing)
@@ -70,6 +91,13 @@ const verifyCredential = async (encryptedMessage) => {
       disclosed: JSON.parse(rv.disclosed)
     }
 
+    if (cred.jwt.status) {
+      const status = await verifyStatus(cred)
+      if (!status) {
+        throw "Credential Status is not valid!"
+      } 
+    }
+    
     let jspath
     if (msg.body.method === "TDDRegistration") {
       jspath = [
@@ -91,7 +119,7 @@ const verifyCredential = async (encryptedMessage) => {
         "$.disclosed.id"
       ]
     } else {
-      let jspath = []
+      jspath = []
     }
 
     for (let path of jspath) {
@@ -143,7 +171,7 @@ const processMessage = async (unpacked, res) => {
       return
     }
   } catch(error) {
-    res.sendStatus(500)
+    throw error
   }
 }
 
@@ -165,7 +193,7 @@ app.post('/', (req, res, next) => {
     processMessage(unpacked, res)
   } catch (error) {
     console.log(error)
-    res.send(error)
+    res.status(406).send(error)
   }
 });
 
