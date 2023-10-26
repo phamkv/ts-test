@@ -19,7 +19,7 @@ export const retrieveUrlFromTD = (thingDescription) => {
 }
 
 export const wotThingExample = async (url) => {
-    WoTHelpers.fetch(url).then(async (td) => {
+    await WoTHelpers.fetch(url).then(async (td) => {
         try {
             const WoT = await servient.start();
             // Then from here on you can consume the thing
@@ -40,7 +40,7 @@ export const wotThingExample = async (url) => {
         catch (err) {
             console.error("Script error:", err);
         }
-    }).catch((err) => { console.error("Fetch error:", err); });
+    }).catch((err) => { console.error("Fetch error:", err); })
 }
 
 // wotThingExample("http://localhost:8080/lightswitch")

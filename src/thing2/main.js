@@ -16,30 +16,41 @@ const port = 4001;
 app.use(express.json());
 app.use(bodyParser.text({ type: 'application/didcomm-encrypted+json' }));
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.resolve(__filename, "..");
-
 // ONLY FOR DEMO / DEVELOPMENT PURPOSES
 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 const instance = axios.create({ httpsAgent })
 
+const DIDSender = "did:web:phamkv.github.io:things:thing2"
+const messageClient = new MessageClient(DIDSender, THING2_SECRETS)
+
+// Create a PerformanceObserver to collect performance entries
+import perf_hooks from "perf_hooks"
+const observer = new perf_hooks.PerformanceObserver((list) => {
+  const entries = list.getEntries();
+  entries.forEach((entry) => {
+    console.log(entry);
+  });
+});
+observer.observe({ entryTypes: ["measure"], buffer: true })
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.resolve(__filename, "..");
 // HTTPS Cert
 const key = fs.readFileSync(path.resolve(__dirname, "./key.pem"));
 const cert = fs.readFileSync(path.resolve(__dirname, "./cert.pem"));
 const server = https.createServer({key: key, cert: cert }, app);
 
-const DIDSender = "did:web:phamkv.github.io:things:thing2"
 const sdJwt = fs.readFileSync(path.resolve(__dirname, "sd-jwt-test.json"), 'utf8');
 
-const messageClient = new MessageClient(DIDSender, THING2_SECRETS)
 const openRequests = {}
-
 let thingDescriptionsTDD = []
 let thingDescriptionsIssuer = []
 
 async function queryProtocolPresentationExchange(DIDReceiver, serviceEndpoint, bodyPayload) {
   try {
+    perf_hooks.performance.mark('start');
     // Retrieve Presentation Definition (Protocol)
+    perf_hooks.performance.mark('def_start');
     const response1 = await instance.get(serviceEndpoint + bodyPayload.method);
     const definition = response1.data;
     console.log('Step 1 response:', definition);
@@ -77,9 +88,12 @@ async function queryProtocolPresentationExchange(DIDReceiver, serviceEndpoint, b
       body: bodyPayload
     }
     openRequests[messageId] = bodyPayload
+    perf_hooks.performance.mark('def_end');
 
     // Send DIDMessage
+    perf_hooks.performance.mark('msg_start');
     const bodyMessage = await messageClient.createMessage(DIDReceiver, obj)
+    perf_hooks.performance.mark('msg_end');
     instance.post(serviceEndpoint, bodyMessage, {
       headers: {
         'content-type': 'application/didcomm-encrypted+json'
@@ -94,16 +108,25 @@ async function queryProtocolPresentationExchange(DIDReceiver, serviceEndpoint, b
 }
 
 const processMessage = async (msg) => {
+  const msg_duration = perf_hooks.performance.measure('Message Encryption', 'msg_start', 'msg_end');
+  const rep_duration = perf_hooks.performance.measure('Message Unpack', 'rep_start', 'rep_end');
+  const def_duration = perf_hooks.performance.measure('Presentation Definition', 'def_start', 'def_end');
   if (openRequests[msg.id].method === "TDDQuery") {
+    perf_hooks.performance.mark('query_end');
     thingDescriptionsTDD = msg.body.query
     console.log(thingDescriptionsTDD)
+    perf_hooks.performance.measure('TDDQuery', 'start', 'query_end');
   } else if (openRequests[msg.id].method === "IssuerRequest") {
+    perf_hooks.performance.mark('issuer_end');
     thingDescriptionsIssuer = msg.body.thingDescriptions
     console.log(thingDescriptionsIssuer)
+    perf_hooks.performance.measure('IssuerRequest', 'start', 'issuer_end');
   } else {
     return ""
   }
-  printSteps()
+  setTimeout(function (){
+    printSteps()           
+  }, 1000)
 }
 
 // DIDComm Presentation Submission for Retrieval
@@ -114,7 +137,9 @@ app.post('/', (req, res, next) => {
   next();
 }, async (req, res) => {
   try {
+    perf_hooks.performance.mark('rep_start');
     const msg = await messageClient.unpackMessage(req.body)
+    perf_hooks.performance.mark('rep_end');
     await processMessage(msg)
     res.sendStatus(202)
   } catch (error) {

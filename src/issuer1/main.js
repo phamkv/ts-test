@@ -12,27 +12,38 @@ import { verifySdJwt } from '../utils/sd-jwt/verify-sd-jwt.js';
 import { resolvePublicKeyWeb } from '../utils/comm/didweb.js';
 import * as createSdJwt from "./create-sdjwt.js"
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.resolve(__filename, "..");
-const outPath = path.resolve(__dirname, "../thing1/sd-jwt-test.json")
-
-// ONLY FOR DEMO / DEVELOPMENT PURPOSES
-const httpsAgent = new https.Agent({ rejectUnauthorized: false });
-const instance = axios.create({ httpsAgent })
-
 const app = express();
 const port = 4000;
 app.use(express.json());
 app.use(bodyParser.text({ type: 'application/didcomm-encrypted+json' }));
 app.use(bodyParser.json({ type: 'discover-features/query' }));
+
+// ONLY FOR DEMO / DEVELOPMENT PURPOSES
+const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+const instance = axios.create({ httpsAgent })
+
+const DIDSender = "did:web:phamkv.github.io:issuer:manufacturer1"
+const messageClient = new MessageClient(DIDSender, ISS1_SECRETS)
+
+// Create a PerformanceObserver to collect performance entries
+import perf_hooks from "perf_hooks"
+const observer = new perf_hooks.PerformanceObserver((list) => {
+  const entries = list.getEntries();
+  entries.forEach((entry) => {
+    console.log(entry);
+  });
+});
+observer.observe({ entryTypes: ["measure"], buffer: true })
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.resolve(__filename, "..");
 // HTTPS Cert
 const key = fs.readFileSync(path.resolve(__dirname, "./key.pem"));
 const cert = fs.readFileSync(path.resolve(__dirname, "./cert.pem"));
 const server = https.createServer({key: key, cert: cert }, app);
 
-const DIDSender = "did:web:phamkv.github.io:issuer:manufacturer1"
-const messageClient = new MessageClient(DIDSender, ISS1_SECRETS)
-
+// Create sd-jwt for thing1 if not created [DEV]
+const outPath = path.resolve(__dirname, "../thing1/sd-jwt-test.json")
 if (!fs.existsSync(outPath)) {
   createSdJwt.main(outPath)
 }
@@ -162,10 +173,13 @@ app.post('/', (req, res, next) => {
   next();
 }, async (req, res) => {
   try {
+    perf_hooks.performance.mark('start');
     const unpacked = await verifyCredential(req.body)
     // Credential verified and valid according to the presentation definition
     // Retrieval will be processed now
     processMessage(unpacked, res)
+    perf_hooks.performance.mark('end');
+    const duration = perf_hooks.performance.measure(unpacked.msg.body.method, 'start', 'end');
   } catch (error) {
     console.log(error)
     res.send(error)
@@ -182,13 +196,13 @@ app.get('/statuslists/:id', (req, res) => {
 // Status List(s) of Issuer
 app.get('/deleteThing1', async (req, res) => {
   try {
+    perf_hooks.performance.mark('del_start');
     const obj = {
       body: {
         method: "TDDDeletion",
         things: ["did:web:phamkv.github.io:things:thing1"]
       }
     }
-
     const sending = await messageClient.createMessage("did:web:phamkv.github.io:service:discovery", obj)
     const endpoint = "https://localhost:3000/"
     const response = await instance.post(endpoint, sending, {
@@ -196,6 +210,8 @@ app.get('/deleteThing1', async (req, res) => {
         'content-type': 'application/didcomm-encrypted+json'
       },
     });
+    perf_hooks.performance.mark('del_end');
+    const del_duration = perf_hooks.performance.measure("Deletion", 'del_start', 'del_end');
     console.log(response.data)
     res.send("Please check the consoles")
   } catch(error) {

@@ -8,20 +8,31 @@ import { THING1_SECRETS } from "../utils/comm/test-vectors.js";
 import { discloseClaims } from "../utils/sd-jwt/disclose-claims.js";
 import { startThingExample } from "../utils/wot/wot.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.resolve(__filename, "..");
-
 // ONLY FOR DEMO / DEVELOPMENT PURPOSES
 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 const instance = axios.create({ httpsAgent })
 
 const DIDSender = "did:web:phamkv.github.io:things:thing1"
-const sdJwt = fs.readFileSync(path.resolve(__dirname, "sd-jwt-test.json"), 'utf8');
-
 const messageClient = new MessageClient(DIDSender, THING1_SECRETS)
+
+// Create a PerformanceObserver to collect performance entries
+import perf_hooks from "perf_hooks"
+const observer = new perf_hooks.PerformanceObserver((list) => {
+  const entries = list.getEntries();
+  entries.forEach((entry) => {
+    console.log(entry);
+  });
+});
+observer.observe({ entryTypes: ["measure"], buffer: true })
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.resolve(__filename, "..");
+
+const sdJwt = fs.readFileSync(path.resolve(__dirname, "sd-jwt-test.json"), 'utf8');
 
 async function registerThing(url, DIDReceiver) {
   try {
+    perf_hooks.performance.mark('start');
     // Step 1: Make the first request and await its response
     const response1 = await instance.get(url + "TDDRegistration");
     const definition = response1.data;
@@ -68,6 +79,8 @@ async function registerThing(url, DIDReceiver) {
         'Content-Type': 'application/didcomm-encrypted+json'
       },
     });
+    perf_hooks.performance.mark('end');
+    const duration = perf_hooks.performance.measure("Registration Thing1", 'start', 'end');
     console.log('Step 2 response:', response2.data);
     return response2
   } catch (error) {

@@ -14,10 +14,26 @@ import { statusListBaseToBitArray, getStatusCode } from '../utils/statusList.js'
 
 const app = express();
 const port = 3000;
+app.use(express.json());
+app.use(bodyParser.text({ type: 'application/didcomm-encrypted+json' }));
+app.use(bodyParser.json({ type: 'discover-features/query' }));
 
 // ONLY FOR DEMO / DEVELOPMENT PURPOSES
 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 const instance = axios.create({ httpsAgent })
+
+const DIDSender = "did:web:phamkv.github.io:service:discovery"
+const messageClient = new MessageClient(DIDSender, TDD_SECRETS)
+
+// Create a PerformanceObserver to collect performance entries
+import perf_hooks from "perf_hooks"
+const observer = new perf_hooks.PerformanceObserver((list) => {
+  const entries = list.getEntries();
+  entries.forEach((entry) => {
+    console.log(entry);
+  });
+});
+observer.observe({ entryTypes: ["measure"], buffer: true })
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.resolve(__filename, "..");
@@ -52,13 +68,6 @@ const deleteThing = (thingId) => { // stub for deletion
     delete tdStorage[thingId]
   }
 }
-
-const DIDSender = "did:web:phamkv.github.io:service:discovery"
-const messageClient = new MessageClient(DIDSender, TDD_SECRETS)
-
-app.use(express.json());
-app.use(bodyParser.text({ type: 'application/didcomm-encrypted+json' }));
-app.use(bodyParser.json({ type: 'discover-features/query' }));
 
 const verifyStatus = async (cred) => {
   const uri = cred.jwt.status.uri
@@ -107,10 +116,13 @@ const verifyCredential = async (encryptedMessage) => {
     }
 
     if (cred.jwt.status) {
+      perf_hooks.performance.mark('status_start');
       const status = await verifyStatus(cred)
       if (!status) {
         throw "Credential Status is not valid!"
       } 
+      perf_hooks.performance.mark('status_end');
+      const duration = perf_hooks.performance.measure("Status Check", 'status_start', 'status_end');
     }
     
     let jspath
@@ -198,12 +210,15 @@ app.post('/', (req, res, next) => {
 }, async (req, res) => {
   try {
     // console.log(req)
+    perf_hooks.performance.mark('start');
     const unpacked = await verifyCredential(req.body)
     // console.log(cred)
     // console.log(msg)
     // Credential verified and valid according to the presentation definition
     // Registration will be processed now
     processMessage(unpacked, res)
+    perf_hooks.performance.mark('end');
+    const duration = perf_hooks.performance.measure(unpacked.msg.body.method, 'start', 'end');
   } catch (error) {
     console.log(error)
     res.status(406).send(error)
