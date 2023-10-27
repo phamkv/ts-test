@@ -1,0 +1,647 @@
+Thing Description Directory is listening at https://localhost:4001
+======Execute the demo by sending the follwing RPCs=======
+Step 1: https://localhost:4001/queryDemo
+Step 2: https://localhost:4001/issuerRequestDemo
+Step 3: https://localhost:4001/thingConsumptionDemo
+{
+  rss: 72847360,
+  heapTotal: 32047104,
+  heapUsed: 18457608,
+  external: 3062394,
+  arrayBuffers: 688107
+}
+{
+  rss: 73515008,
+  heapTotal: 32047104,
+  heapUsed: 18531536,
+  external: 3062434,
+  arrayBuffers: 688107
+}
+{
+  rss: 180297728,
+  heapTotal: 80019456,
+  heapUsed: 44400184,
+  external: 13213971,
+  arrayBuffers: 6651418
+}
+[nodemon] restarting due to changes...
+[nodemon] starting `node src/thing2/main.js`
+
+Thing Description Directory is listening at https://localhost:4001
+======Execute the demo by sending the follwing RPCs=======
+Step 1: https://localhost:4001/queryDemo
+Step 2: https://localhost:4001/issuerRequestDemo
+Step 3: https://localhost:4001/thingConsumptionDemo
+{
+  rss: 71118848,
+  heapTotal: 33886208,
+  heapUsed: 22260056,
+  external: 4446456,
+  arrayBuffers: 2072169
+}
+{
+  rss: 71745536,
+  heapTotal: 33886208,
+  heapUsed: 22402264,
+  external: 4446496,
+  arrayBuffers: 2072169
+}
+{
+  rss: 147226624,
+  heapTotal: 66125824,
+  heapUsed: 39184624,
+  external: 9773204,
+  arrayBuffers: 4009551
+}
+[nodemon] restarting due to changes...
+[nodemon] starting `node src/thing2/main.js`
+
+Thing Description Directory is listening at https://localhost:4001
+======Execute the demo by sending the follwing RPCs=======
+Step 1: https://localhost:4001/queryDemo
+Step 2: https://localhost:4001/issuerRequestDemo
+Step 3: https://localhost:4001/thingConsumptionDemo
+{
+  rss: 72888320,
+  heapTotal: 32047104,
+  heapUsed: 18466600,
+  external: 3101023,
+  arrayBuffers: 726736
+}
+{
+  rss: 73539584,
+  heapTotal: 32047104,
+  heapUsed: 18579048,
+  external: 3101063,
+  arrayBuffers: 726736
+}
+{
+  rss: 132100096,
+  heapTotal: 61931520,
+  heapUsed: 34520568,
+  external: 9307751,
+  arrayBuffers: 4229348
+}
+[nodemon] restarting due to changes...
+[nodemon] starting `node src/thing2/main.js`
+
+Thing Description Directory is listening at https://localhost:4001
+======Execute the demo by sending the follwing RPCs=======
+Step 1: https://localhost:4001/queryDemo
+Step 2: https://localhost:4001/issuerRequestDemo
+Step 3: https://localhost:4001/thingConsumptionDemo
+{
+  rss: 70918144,
+  heapTotal: 33886208,
+  heapUsed: 22231984,
+  external: 4446456,
+  arrayBuffers: 2072169
+}
+{
+  rss: 71598080,
+  heapTotal: 34148352,
+  heapUsed: 22593304,
+  external: 4446496,
+  arrayBuffers: 2072169
+}
+{
+  rss: 93396992,
+  heapTotal: 22872064,
+  heapUsed: 20037848,
+  external: 4298483,
+  arrayBuffers: 96048
+}
+[nodemon] restarting due to changes...
+[nodemon] starting `node src/thing2/main.js`
+
+Thing Description Directory is listening at https://localhost:4001
+======Execute the demo by sending the follwing RPCs=======
+Step 1: https://localhost:4001/queryDemo
+Step 2: https://localhost:4001/issuerRequestDemo
+Step 3: https://localhost:4001/thingConsumptionDemo
+{
+  rss: 73785344,
+  heapTotal: 32047104,
+  heapUsed: 18414080,
+  external: 3101023,
+  arrayBuffers: 726736
+}
+{
+  rss: 74444800,
+  heapTotal: 32047104,
+  heapUsed: 18523416,
+  external: 3101063,
+  arrayBuffers: 726736
+}
+{
+  rss: 90652672,
+  heapTotal: 23396352,
+  heapUsed: 20222240,
+  external: 4167496,
+  arrayBuffers: 96133
+}
+[nodemon] restarting due to changes...
+[nodemon] starting `node src/thing2/main.js`
+
+Thing Description Directory is listening at https://localhost:4001
+======Execute the demo by sending the follwing RPCs=======
+Step 1: https://localhost:4001/queryDemo
+Step 2: https://localhost:4001/issuerRequestDemo
+Step 3: https://localhost:4001/thingConsumptionDemo
+{
+  rss: 72626176,
+  heapTotal: 32047104,
+  heapUsed: 18614040,
+  external: 3067450,
+  arrayBuffers: 693163
+}
+{
+  rss: 73318400,
+  heapTotal: 32047104,
+  heapUsed: 18686744,
+  external: 3067490,
+  arrayBuffers: 693163
+}
+{
+  rss: 99876864,
+  heapTotal: 23134208,
+  heapUsed: 20268968,
+  external: 4495003,
+  arrayBuffers: 95960
+}
+[nodemon] restarting due to changes...
+[nodemon] starting `node src/thing2/main.js`
+
+Thing Description Directory is listening at https://localhost:4001
+======Execute the demo by sending the follwing RPCs=======
+Step 1: https://localhost:4001/queryDemo
+Step 2: https://localhost:4001/issuerRequestDemo
+Step 3: https://localhost:4001/thingConsumptionDemo
+{
+  rss: 73162752,
+  heapTotal: 32047104,
+  heapUsed: 18386720,
+  external: 3067450,
+  arrayBuffers: 693163
+}
+{
+  rss: 73764864,
+  heapTotal: 32047104,
+  heapUsed: 18524928,
+  external: 3067490,
+  arrayBuffers: 693163
+}
+{
+  rss: 94416896,
+  heapTotal: 23658496,
+  heapUsed: 20214464,
+  external: 4429555,
+  arrayBuffers: 96048
+}
+[nodemon] restarting due to changes...
+[nodemon] starting `node src/thing2/main.js`
+[nodemon] restarting due to changes...
+[nodemon] starting `node src/thing2/main.js`
+
+Thing Description Directory is listening at https://localhost:4001
+======Execute the demo by sending the follwing RPCs=======
+Step 1: https://localhost:4001/queryDemo
+Step 2: https://localhost:4001/issuerRequestDemo
+Step 3: https://localhost:4001/thingConsumptionDemo
+{
+  rss: 73297920,
+  heapTotal: 32047104,
+  heapUsed: 18414896,
+  external: 3067450,
+  arrayBuffers: 693163
+}
+{
+  rss: 73916416,
+  heapTotal: 32047104,
+  heapUsed: 18564864,
+  external: 3067490,
+  arrayBuffers: 693163
+}
+{
+  rss: 110215168,
+  heapTotal: 23658496,
+  heapUsed: 20506520,
+  external: 4757523,
+  arrayBuffers: 96336
+}
+[nodemon] restarting due to changes...
+[nodemon] starting `node src/thing2/main.js`
+
+Thing Description Directory is listening at https://localhost:4001
+======Execute the demo by sending the follwing RPCs=======
+Step 1: https://localhost:4001/queryDemo
+Step 2: https://localhost:4001/issuerRequestDemo
+Step 3: https://localhost:4001/thingConsumptionDemo
+{
+  rss: 72085504,
+  heapTotal: 33886208,
+  heapUsed: 22224472,
+  external: 4446456,
+  arrayBuffers: 2072169
+}
+{
+  rss: 72695808,
+  heapTotal: 33886208,
+  heapUsed: 22382128,
+  external: 4446496,
+  arrayBuffers: 2072169
+}
+{
+  rss: 134316032,
+  heapTotal: 64290816,
+  heapUsed: 30893320,
+  external: 9523319,
+  arrayBuffers: 4534452
+}
+[nodemon] restarting due to changes...
+[nodemon] starting `node src/thing2/main.js`
+
+Thing Description Directory is listening at https://localhost:4001
+======Execute the demo by sending the follwing RPCs=======
+Step 1: https://localhost:4001/queryDemo
+Step 2: https://localhost:4001/issuerRequestDemo
+Step 3: https://localhost:4001/thingConsumptionDemo
+{
+  rss: 71692288,
+  heapTotal: 33886208,
+  heapUsed: 22310632,
+  external: 4446456,
+  arrayBuffers: 2072169
+}
+{
+  rss: 72388608,
+  heapTotal: 33886208,
+  heapUsed: 22384704,
+  external: 4446496,
+  arrayBuffers: 2072169
+}
+{
+  rss: 141959168,
+  heapTotal: 69009408,
+  heapUsed: 41739000,
+  external: 12611228,
+  arrayBuffers: 7138401
+}
+[nodemon] restarting due to changes...
+[nodemon] starting `node src/thing2/main.js`
+
+Thing Description Directory is listening at https://localhost:4001
+======Execute the demo by sending the follwing RPCs=======
+Step 1: https://localhost:4001/queryDemo
+Step 2: https://localhost:4001/issuerRequestDemo
+Step 3: https://localhost:4001/thingConsumptionDemo
+{
+  rss: 71450624,
+  heapTotal: 33886208,
+  heapUsed: 22259776,
+  external: 4446456,
+  arrayBuffers: 2072169
+}
+{
+  rss: 72101888,
+  heapTotal: 33886208,
+  heapUsed: 22369152,
+  external: 4446496,
+  arrayBuffers: 2072169
+}
+{
+  rss: 131493888,
+  heapTotal: 63504384,
+  heapUsed: 38755136,
+  external: 10399759,
+  arrayBuffers: 5015020
+}
+[nodemon] restarting due to changes...
+[nodemon] starting `node src/thing2/main.js`
+[nodemon] restarting due to changes...
+[nodemon] starting `node src/thing2/main.js`
+
+Thing Description Directory is listening at https://localhost:4001
+======Execute the demo by sending the follwing RPCs=======
+Step 1: https://localhost:4001/queryDemo
+Step 2: https://localhost:4001/issuerRequestDemo
+Step 3: https://localhost:4001/thingConsumptionDemo
+{
+  rss: 71569408,
+  heapTotal: 33886208,
+  heapUsed: 22236376,
+  external: 4446456,
+  arrayBuffers: 2072169
+}
+{
+  rss: 72183808,
+  heapTotal: 33886208,
+  heapUsed: 22379968,
+  external: 4446496,
+  arrayBuffers: 2072169
+}
+{
+  rss: 148021248,
+  heapTotal: 67960832,
+  heapUsed: 23742104,
+  external: 6130273,
+  arrayBuffers: 527564
+}
+[nodemon] restarting due to changes...
+[nodemon] starting `node src/thing2/main.js`
+
+Thing Description Directory is listening at https://localhost:4001
+======Execute the demo by sending the follwing RPCs=======
+Step 1: https://localhost:4001/queryDemo
+Step 2: https://localhost:4001/issuerRequestDemo
+Step 3: https://localhost:4001/thingConsumptionDemo
+{
+  rss: 71729152,
+  heapTotal: 32047104,
+  heapUsed: 18348136,
+  external: 3101023,
+  arrayBuffers: 726736
+}
+{
+  rss: 72380416,
+  heapTotal: 32047104,
+  heapUsed: 18455352,
+  external: 3101063,
+  arrayBuffers: 726736
+}
+{
+  rss: 149970944,
+  heapTotal: 69533696,
+  heapUsed: 31727744,
+  external: 8757595,
+  arrayBuffers: 3004516
+}
+[nodemon] restarting due to changes...
+[nodemon] starting `node src/thing2/main.js`
+
+Thing Description Directory is listening at https://localhost:4001
+======Execute the demo by sending the follwing RPCs=======
+Step 1: https://localhost:4001/queryDemo
+Step 2: https://localhost:4001/issuerRequestDemo
+Step 3: https://localhost:4001/thingConsumptionDemo
+{
+  rss: 71512064,
+  heapTotal: 33886208,
+  heapUsed: 22210576,
+  external: 4446456,
+  arrayBuffers: 2072169
+}
+{
+  rss: 72200192,
+  heapTotal: 34148352,
+  heapUsed: 22562856,
+  external: 4446496,
+  arrayBuffers: 2072169
+}
+{
+  rss: 135905280,
+  heapTotal: 62193664,
+  heapUsed: 25641928,
+  external: 6090798,
+  arrayBuffers: 508253
+}
+[nodemon] restarting due to changes...
+[nodemon] starting `node src/thing2/main.js`
+
+Thing Description Directory is listening at https://localhost:4001
+======Execute the demo by sending the follwing RPCs=======
+Step 1: https://localhost:4001/queryDemo
+Step 2: https://localhost:4001/issuerRequestDemo
+Step 3: https://localhost:4001/thingConsumptionDemo
+{
+  rss: 73854976,
+  heapTotal: 32047104,
+  heapUsed: 18459752,
+  external: 3101023,
+  arrayBuffers: 726736
+}
+{
+  rss: 74498048,
+  heapTotal: 32047104,
+  heapUsed: 18566896,
+  external: 3101063,
+  arrayBuffers: 726736
+}
+{
+  rss: 147460096,
+  heapTotal: 65339392,
+  heapUsed: 32325752,
+  external: 7067932,
+  arrayBuffers: 1671253
+}
+[nodemon] restarting due to changes...
+[nodemon] starting `node src/thing2/main.js`
+[nodemon] restarting due to changes...
+[nodemon] starting `node src/thing2/main.js`
+
+Thing Description Directory is listening at https://localhost:4001
+======Execute the demo by sending the follwing RPCs=======
+Step 1: https://localhost:4001/queryDemo
+Step 2: https://localhost:4001/issuerRequestDemo
+Step 3: https://localhost:4001/thingConsumptionDemo
+{
+  rss: 72962048,
+  heapTotal: 32047104,
+  heapUsed: 18431320,
+  external: 3101023,
+  arrayBuffers: 726736
+}
+{
+  rss: 73617408,
+  heapTotal: 32047104,
+  heapUsed: 18537280,
+  external: 3101063,
+  arrayBuffers: 726736
+}
+{
+  rss: 147709952,
+  heapTotal: 65077248,
+  heapUsed: 36163176,
+  external: 7582467,
+  arrayBuffers: 2130864
+}
+[nodemon] restarting due to changes...
+[nodemon] starting `node src/thing2/main.js`
+
+Thing Description Directory is listening at https://localhost:4001
+======Execute the demo by sending the follwing RPCs=======
+Step 1: https://localhost:4001/queryDemo
+Step 2: https://localhost:4001/issuerRequestDemo
+Step 3: https://localhost:4001/thingConsumptionDemo
+{
+  rss: 72466432,
+  heapTotal: 33886208,
+  heapUsed: 22219496,
+  external: 4446456,
+  arrayBuffers: 2072169
+}
+{
+  rss: 73129984,
+  heapTotal: 34148352,
+  heapUsed: 22584816,
+  external: 4446496,
+  arrayBuffers: 2072169
+}
+{
+  rss: 133644288,
+  heapTotal: 65339392,
+  heapUsed: 36921264,
+  external: 10505673,
+  arrayBuffers: 5457106
+}
+[nodemon] restarting due to changes...
+[nodemon] starting `node src/thing2/main.js`
+
+Thing Description Directory is listening at https://localhost:4001
+======Execute the demo by sending the follwing RPCs=======
+Step 1: https://localhost:4001/queryDemo
+Step 2: https://localhost:4001/issuerRequestDemo
+Step 3: https://localhost:4001/thingConsumptionDemo
+{
+  rss: 72269824,
+  heapTotal: 31784960,
+  heapUsed: 18407520,
+  external: 3067450,
+  arrayBuffers: 693163
+}
+{
+  rss: 72851456,
+  heapTotal: 31784960,
+  heapUsed: 18567248,
+  external: 3067490,
+  arrayBuffers: 693163
+}
+{
+  rss: 133992448,
+  heapTotal: 65601536,
+  heapUsed: 33029392,
+  external: 10312769,
+  arrayBuffers: 5520510
+}
+{
+  rss: 94236672,
+  heapTotal: 22609920,
+  heapUsed: 20629192,
+  external: 4888650,
+  arrayBuffers: 96391
+}
+{
+  rss: 94326784,
+  heapTotal: 22609920,
+  heapUsed: 20706336,
+  external: 4888650,
+  arrayBuffers: 96391
+}
+[nodemon] restarting due to changes...
+[nodemon] starting `node src/thing2/main.js`
+
+Thing Description Directory is listening at https://localhost:4001
+======Execute the demo by sending the follwing RPCs=======
+Step 1: https://localhost:4001/queryDemo
+Step 2: https://localhost:4001/issuerRequestDemo
+Step 3: https://localhost:4001/thingConsumptionDemo
+{
+  rss: 72437760,
+  heapTotal: 32047104,
+  heapUsed: 18434800,
+  external: 3101023,
+  arrayBuffers: 726736
+}
+{
+  rss: 73052160,
+  heapTotal: 32047104,
+  heapUsed: 18586328,
+  external: 3101063,
+  arrayBuffers: 726736
+}
+{
+  rss: 133955584,
+  heapTotal: 63766528,
+  heapUsed: 28658048,
+  external: 6127588,
+  arrayBuffers: 1179049
+}
+{
+  rss: 96808960,
+  heapTotal: 23134208,
+  heapUsed: 20884568,
+  external: 4946714,
+  arrayBuffers: 88919
+}
+{
+  rss: 96894976,
+  heapTotal: 23134208,
+  heapUsed: 20963688,
+  external: 4954906,
+  arrayBuffers: 97111
+}
+{
+  rss: 133349376,
+  heapTotal: 61669376,
+  heapUsed: 34242496,
+  external: 8175519,
+  arrayBuffers: 2046004
+}
+[nodemon] restarting due to changes...
+[nodemon] starting `node src/thing2/main.js`
+
+Thing Description Directory is listening at https://localhost:4001
+======Execute the demo by sending the follwing RPCs=======
+Step 1: https://localhost:4001/queryDemo
+Step 2: https://localhost:4001/issuerRequestDemo
+Step 3: https://localhost:4001/thingConsumptionDemo
+{
+  rss: 71659520,
+  heapTotal: 32047104,
+  heapUsed: 18391216,
+  external: 3101023,
+  arrayBuffers: 726736
+}
+{
+  rss: 72282112,
+  heapTotal: 32047104,
+  heapUsed: 18497936,
+  external: 3101063,
+  arrayBuffers: 726736
+}
+{
+  rss: 134385664,
+  heapTotal: 62455808,
+  heapUsed: 32793560,
+  external: 9324171,
+  arrayBuffers: 4697476
+}
+[nodemon] restarting due to changes...
+[nodemon] starting `node src/thing2/main.js`
+
+Thing Description Directory is listening at https://localhost:4001
+======Execute the demo by sending the follwing RPCs=======
+Step 1: https://localhost:4001/queryDemo
+Step 2: https://localhost:4001/issuerRequestDemo
+Step 3: https://localhost:4001/thingConsumptionDemo
+{
+  rss: 73158656,
+  heapTotal: 32047104,
+  heapUsed: 18429112,
+  external: 3101023,
+  arrayBuffers: 726736
+}
+{
+  rss: 73793536,
+  heapTotal: 32047104,
+  heapUsed: 18553632,
+  external: 3101063,
+  arrayBuffers: 726736
+}
+{
+  rss: 132337664,
+  heapTotal: 60620800,
+  heapUsed: 31612216,
+  external: 8268993,
+  arrayBuffers: 3810250
+}
