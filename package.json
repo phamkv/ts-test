@@ -19,6 +19,7 @@
     "didcomm": "file:./didcomm_pkg",
     "ethr-did": "^2.3.20",
     "express": "^4.18.2",
+    "express-status-monitor": "^1.3.4",
     "gzip-js": "^0.3.2",
     "jose": "^4.15.1",
     "jsonpath": "^1.1.1",

@@ -1,4 +1,4 @@
-import express from 'express'
+import express, { response } from 'express'
 import axios from "axios";
 import https from "https"
 import bodyParser from "body-parser"
@@ -53,11 +53,11 @@ async function queryProtocolPresentationExchange(DIDReceiver, serviceEndpoint, b
     perf_hooks.performance.mark('def_start');
     const response1 = await instance.get(serviceEndpoint + bodyPayload.method);
     const definition = response1.data;
-    console.log('Step 1 response:', definition);
+    // console.log('Step 1 response:', definition);
 
     // Set disclosed attributes according to definition
     const constraints = definition.presentation_definition.input_descriptors[0].constraints.fields[0].path
-    console.log(constraints)
+    // console.log(constraints)
     const claims = constraints.filter(element => element.includes("$.disclosed")).map(str => {
       const parts = str.split('.')
       let propName = parts[parts.length - 1]
@@ -140,7 +140,7 @@ app.post('/', (req, res, next) => {
     perf_hooks.performance.mark('rep_start');
     const msg = await messageClient.unpackMessage(req.body)
     perf_hooks.performance.mark('rep_end');
-    await processMessage(msg)
+    // await processMessage(msg)
     res.sendStatus(202)
   } catch (error) {
     console.log(error)
@@ -157,6 +157,46 @@ app.get("/queryDemo", (req, res) => {
   const tddDID = "did:web:phamkv.github.io:service:discovery"
   queryProtocolPresentationExchange(tddDID, 'https://localhost:3000/', payload1)
   res.send("Step 1: Please look into the console")
+});
+
+async function delayedLoop(iterations) {
+  let i = 0;
+
+  const response = await instance.get('https://localhost:3000/memoryCapture');  
+  console.log(response.data)
+  const payload1 = {
+    method: "TDDQuery",
+    types: ["saref:LightSwitch", "saref:Light", "saref:LightingDevice"]
+  }
+  const tddDID = "did:web:phamkv.github.io:service:discovery"
+
+  async function loop() {
+    if (i < iterations) {
+      for (let j = 0; j < 50; j++) {
+        queryProtocolPresentationExchange(tddDID, 'https://localhost:3000/', payload1)
+      }
+      i++;
+      // Call the loop function again after a 1-second delay
+      setTimeout(loop, 3000); // 1000 milliseconds = 1 second
+    }
+  }
+
+  // Start the loop
+  loop();
+}
+
+app.get("/tddStressTest", async (req, res) => {
+  // Retrieve things matching the types from a Thing Description Discovery Service
+  const response = await instance.get('https://localhost:3000/memoryCapture');  
+  console.log(response.data)
+
+  delayedLoop(3)
+
+  setTimeout(async function (){ 
+    const response = await instance.get('https://localhost:3000/memoryCapture'); 
+    console.log(response.data)
+  }, 15000)
+  res.send("TDD Query Stress Test: Please look into the console")
 });
 
 app.get("/issuerRequestDemo", (req, res) => {

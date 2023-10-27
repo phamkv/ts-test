@@ -11,9 +11,12 @@ import { TDD_SECRETS } from "../utils/comm/test-vectors.js";
 import { verifySdJwt } from '../utils/sd-jwt/verify-sd-jwt.js';
 import { resolvePublicKeyWeb } from '../utils/comm/didweb.js';
 import { statusListBaseToBitArray, getStatusCode } from '../utils/statusList.js'
+import * as sm from "express-status-monitor"
+const statusMonitor = sm.default()
 
 const app = express();
 const port = 3000;
+app.use(statusMonitor);
 app.use(express.json());
 app.use(bodyParser.text({ type: 'application/didcomm-encrypted+json' }));
 app.use(bodyParser.json({ type: 'discover-features/query' }));
@@ -133,7 +136,6 @@ const verifyCredential = async (encryptedMessage) => {
         "$.disclosed.title",
         "$.disclosed['@type']",
         "$.disclosed.security"
-        // TODO: revocation key
       ]
     } else if (msg.body.method === "TDDQuery") {
       jspath = [
@@ -200,6 +202,9 @@ const processMessage = async (unpacked, res) => {
   }
 }
 
+// Test
+const durationArray = []
+
 // DIDComm Presentation Submission for Registration
 app.post('/', (req, res, next) => {
   const contentType = req.headers['content-type'];
@@ -219,6 +224,7 @@ app.post('/', (req, res, next) => {
     processMessage(unpacked, res)
     perf_hooks.performance.mark('end');
     const duration = perf_hooks.performance.measure(unpacked.msg.body.method, 'start', 'end');
+    durationArray.push(duration)
   } catch (error) {
     console.log(error)
     res.status(406).send(error)
@@ -237,6 +243,21 @@ app.get('/TDDQuery', (req, res, next) => {
   const sdJwt = fs.readFileSync(path.resolve(__dirname, "query_presentation_definition.json"), 'utf8');
   res.send(sdJwt)
 });
+
+app.get('/status', statusMonitor.pageRoute)
+
+app.get('/memoryCapture', (req, res) => {
+  res.send(process.memoryUsage())
+  const data = durationArray.map(pm => pm.duration).join("\n")
+  // Write the data to the file
+  fs.writeFile(path.resolve(__dirname, "output.txt"), data, (err) => {
+    if (err) {
+      console.error('Error writing to file:', err);
+    } else {
+      console.log('Array has been written to the file.');
+    }
+  });
+})
 
 server.listen(port, () => {
   console.log(`Thing Description Directory is listening at https://localhost:${port}`);
