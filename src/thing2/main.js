@@ -140,7 +140,7 @@ app.post('/', (req, res, next) => {
     perf_hooks.performance.mark('rep_start');
     const msg = await messageClient.unpackMessage(req.body)
     perf_hooks.performance.mark('rep_end');
-    // await processMessage(msg)
+    await processMessage(msg)
     res.sendStatus(202)
   } catch (error) {
     console.log(error)
