@@ -1,3 +1,4 @@
+import express, { response } from 'express'
 import fs from "fs"
 import {fileURLToPath} from 'url';
 import path from "path"
@@ -7,6 +8,9 @@ import { MessageClient } from "../utils/comm/commMessage.js";
 import { THING1_SECRETS } from "../utils/comm/test-vectors.js";
 import { discloseClaims } from "../utils/sd-jwt/disclose-claims.js";
 import { startThingExample } from "../utils/wot/wot.js";
+
+const app = express();
+const port = 4001;
 
 // ONLY FOR DEMO / DEVELOPMENT PURPOSES
 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
@@ -29,6 +33,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.resolve(__filename, "..");
 
 const sdJwt = fs.readFileSync(path.resolve(__dirname, "sd-jwt-test.json"), 'utf8');
+
+const durationArray = []
 
 async function registerThing(url, DIDReceiver) {
   try {
@@ -71,9 +77,11 @@ async function registerThing(url, DIDReceiver) {
         types: ["saref:LightSwitch", "saref:Light", "saref:LightingDevice"]
       }
     }
+    console.log(obj)
 
     // Send DIDMessage
     const body = await messageClient.createMessage(DIDReceiver, obj)
+    console.log(body)
     const response2 = await instance.post(url, body, {
       headers: {
         'Content-Type': 'application/didcomm-encrypted+json'
@@ -81,6 +89,7 @@ async function registerThing(url, DIDReceiver) {
     });
     perf_hooks.performance.mark('end');
     const duration = perf_hooks.performance.measure("Registration Thing1", 'start', 'end');
+    durationArray.push(duration)
     console.log('Step 2 response:', response2.data);
     return response2
   } catch (error) {
@@ -88,12 +97,34 @@ async function registerThing(url, DIDReceiver) {
   }
 }
 
-try{
+app.get("/registrationDemo", async (req, res) => {
+  // Consume TD and send test request to Thing1
   const tddDID = "did:web:phamkv.github.io:service:discovery"
   const response = await registerThing('https://localhost:3000/', tddDID);
-  if (response.status === 202) {
-    startThingExample();
-  }
-} catch (error) {
-  // console.log(error)
+  // outputMeasurement()
+  printSteps()
+  res.send("Please look into the console")
+});
+
+app.listen(port, async () => {
+  console.log(`Thing1 is listening at http://localhost:${port}`);
+  await startThingExample();
+  printSteps();
+});
+
+const printSteps = () => {
+  console.log("======Execute the demo by sending the follwing RPCs=======")
+  console.log(`http://localhost:${port}/registrationDemo`);
+}
+
+const outputMeasurement = () => {
+  const data = durationArray.map(pm => pm.duration).join("\n")
+
+  fs.writeFile(path.resolve(__dirname, "output.txt"), data, (err) => {
+    if (err) {
+      console.error('Error writing to file:', err);
+    } else {
+      console.log('Array has been written to the file.');
+    }
+  });
 }

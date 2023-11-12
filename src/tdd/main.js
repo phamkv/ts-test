@@ -96,7 +96,7 @@ const verifyCredential = async (encryptedMessage) => {
   try {
     // Handle Registration (sd-jwt verification and storing)
     const msg = await messageClient.unpackMessage(encryptedMessage)
-    // console.log(msg)
+    console.log(msg)
     const presentationSubmission = msg.presentation_submission
     console.log(presentationSubmission)
     console.log(msg)
@@ -106,6 +106,8 @@ const verifyCredential = async (encryptedMessage) => {
         msg: msg
       }
     }
+
+    perf_hooks.performance.mark('vc_start');
     const verfiableCredentials = presentationSubmission.descriptor_map.map(vc => jp.query(msg, vc.path)[0])
     // console.log(verfiableCredentials)
     const sdJwt = verfiableCredentials[0].payload
@@ -113,6 +115,10 @@ const verifyCredential = async (encryptedMessage) => {
     const jwksBytes = await resolvePublicKeyWeb(parseJwt(sdJwt).iss)
 
     const rv = await verifySdJwt(sdJwt, jwksBytes)
+    perf_hooks.performance.mark('vc_end');
+    const vc_duration = perf_hooks.performance.measure("VC verification", 'vc_start', 'vc_end');
+    durationArray.push(vc_duration)
+
     const cred = {
       jwt: JSON.parse(rv.jwt),
       disclosed: JSON.parse(rv.disclosed)
@@ -145,6 +151,8 @@ const verifyCredential = async (encryptedMessage) => {
     } else {
       jspath = []
     }
+
+    console.log(cred)
 
     for (let path of jspath) {
       try {
@@ -183,7 +191,7 @@ const processMessage = async (unpacked, res) => {
     
       res.sendStatus(202)
       const sending = await messageClient.createMessage(msg.from, obj)
-      const endpoint = "https://localhost:4001/"
+      const endpoint = "https://localhost:4002/"
       instance.post(endpoint, sending, {
         headers: {
           'content-type': 'application/didcomm-encrypted+json'
@@ -224,7 +232,7 @@ app.post('/', (req, res, next) => {
     processMessage(unpacked, res)
     perf_hooks.performance.mark('end');
     const duration = perf_hooks.performance.measure(unpacked.msg.body.method, 'start', 'end');
-    durationArray.push(duration)
+    // durationArray.push(duration)
   } catch (error) {
     console.log(error)
     res.status(406).send(error)
@@ -248,8 +256,12 @@ app.get('/status', statusMonitor.pageRoute)
 
 app.get('/memoryCapture', (req, res) => {
   res.send(process.memoryUsage())
+  // outputMeasurement()
+})
+
+const outputMeasurement = () => {
   const data = durationArray.map(pm => pm.duration).join("\n")
-  // Write the data to the file
+
   fs.writeFile(path.resolve(__dirname, "output.txt"), data, (err) => {
     if (err) {
       console.error('Error writing to file:', err);
@@ -257,7 +269,7 @@ app.get('/memoryCapture', (req, res) => {
       console.log('Array has been written to the file.');
     }
   });
-})
+}
 
 server.listen(port, () => {
   console.log(`Thing Description Directory is listening at https://localhost:${port}`);

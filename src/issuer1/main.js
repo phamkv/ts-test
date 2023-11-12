@@ -130,6 +130,7 @@ const verifyCredential = async (encryptedMessage) => {
   }
 }
 
+const durationArray = []
 const processMessage = async (unpacked, res) => {
   const { cred, msg } = unpacked
   try {
@@ -212,6 +213,8 @@ app.get('/deleteThing1', async (req, res) => {
     });
     perf_hooks.performance.mark('del_end');
     const del_duration = perf_hooks.performance.measure("Deletion", 'del_start', 'del_end');
+    durationArray.push(del_duration)
+    // outputMeasurement()
     console.log(response.data)
     res.send("Please check the consoles")
   } catch(error) {
@@ -224,13 +227,17 @@ server.listen(port, () => {
   console.log(`For DEMO: The entry of Thing1 in the TDD can be deleted using this RPC: https://localhost:${port}/deleteThing1`)
 });
 
-// TODO: Revocation and deletion of ThingInfo in TDD
+const outputMeasurement = () => {
+  const data = durationArray.map(pm => pm.duration).join("\n")
 
-// TODO: discovery features muss noch geklärt werden
-
-// TODO: Design and Concept schreiben (partially, ergänzt mit Info, die on the fly noch aufkommen)
-
-// TODO: Gedanken machen zur Evaluation (ein/zwei Tage)
+  fs.writeFile(path.resolve(__dirname, "output.txt"), data, (err) => {
+    if (err) {
+      console.error('Error writing to file:', err);
+    } else {
+      console.log('Array has been written to the file.');
+    }
+  });
+}
 
 app.get('/', (req, res) => {
   const contentType = req.headers['content-type'];

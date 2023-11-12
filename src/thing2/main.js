@@ -12,7 +12,7 @@ import { discloseClaims } from "../utils/sd-jwt/disclose-claims.js";
 import { retrieveUrlFromTD, wotThingExample } from "../utils/wot/wot-client.js";
 
 const app = express();
-const port = 4001;
+const port = 4002;
 app.use(express.json());
 app.use(bodyParser.text({ type: 'application/didcomm-encrypted+json' }));
 
@@ -107,15 +107,18 @@ async function queryProtocolPresentationExchange(DIDReceiver, serviceEndpoint, b
   }
 }
 
+const durationArray = []
 const processMessage = async (msg) => {
   const msg_duration = perf_hooks.performance.measure('Message Encryption', 'msg_start', 'msg_end');
   const rep_duration = perf_hooks.performance.measure('Message Unpack', 'rep_start', 'rep_end');
   const def_duration = perf_hooks.performance.measure('Presentation Definition', 'def_start', 'def_end');
+  // durationArray.push(rep_duration)
   if (openRequests[msg.id].method === "TDDQuery") {
     perf_hooks.performance.mark('query_end');
     thingDescriptionsTDD = msg.body.query
     console.log(thingDescriptionsTDD)
-    perf_hooks.performance.measure('TDDQuery', 'start', 'query_end');
+    const duration = perf_hooks.performance.measure('TDDQuery', 'start', 'query_end');
+    durationArray.push(duration)
   } else if (openRequests[msg.id].method === "IssuerRequest") {
     perf_hooks.performance.mark('issuer_end');
     thingDescriptionsIssuer = msg.body.thingDescriptions
@@ -141,6 +144,7 @@ app.post('/', (req, res, next) => {
     const msg = await messageClient.unpackMessage(req.body)
     perf_hooks.performance.mark('rep_end');
     await processMessage(msg)
+    // outputMeasurement()
     res.sendStatus(202)
   } catch (error) {
     console.log(error)
@@ -220,7 +224,7 @@ app.get("/thingConsumptionDemo", async (req, res) => {
 });
 
 server.listen(port, () => {
-  console.log(`Thing Description Directory is listening at https://localhost:${port}`);
+  console.log(`Thing2 is listening at https://localhost:${port}`);
   printSteps();
 });
 
@@ -231,4 +235,14 @@ const printSteps = () => {
   console.log(`Step 3: https://localhost:${port}/thingConsumptionDemo`);
 }
 
-// TODO retrieving service endpoint from DIDDoc, then retrieving api endpoint using discover feature protocol
+const outputMeasurement = () => {
+  const data = durationArray.map(pm => pm.duration).join("\n")
+
+  fs.writeFile(path.resolve(__dirname, "output.txt"), data, (err) => {
+    if (err) {
+      console.error('Error writing to file:', err);
+    } else {
+      console.log('Array has been written to the file.');
+    }
+  });
+}
