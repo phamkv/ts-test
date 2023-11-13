@@ -12,11 +12,12 @@ import { verifySdJwt } from '../utils/sd-jwt/verify-sd-jwt.js';
 import { resolvePublicKeyWeb } from '../utils/comm/didweb.js';
 import * as createSdJwt from "./create-sdjwt.js"
 
+const port = 3004;
 const app = express();
-const port = 4000;
+const httpsApp = express();
 app.use(express.json());
-app.use(bodyParser.text({ type: 'application/didcomm-encrypted+json' }));
-app.use(bodyParser.json({ type: 'discover-features/query' }));
+httpsApp.use(express.json());
+httpsApp.use(bodyParser.text({ type: 'application/didcomm-encrypted+json' }));
 
 // ONLY FOR DEMO / DEVELOPMENT PURPOSES
 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
@@ -34,13 +35,14 @@ const observer = new perf_hooks.PerformanceObserver((list) => {
   });
 });
 observer.observe({ entryTypes: ["measure"], buffer: true })
+const durationArray = []
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.resolve(__filename, "..");
 // HTTPS Cert
 const key = fs.readFileSync(path.resolve(__dirname, "./key.pem"));
 const cert = fs.readFileSync(path.resolve(__dirname, "./cert.pem"));
-const server = https.createServer({key: key, cert: cert }, app);
+const server = https.createServer({key: key, cert: cert }, httpsApp);
 
 // Create sd-jwt for thing1 if not created [DEV]
 const outPath = path.resolve(__dirname, "../thing1/sd-jwt-test.json")
@@ -48,34 +50,92 @@ if (!fs.existsSync(outPath)) {
   createSdJwt.main(outPath)
 }
 
-function parseJwt (token) {
-  return JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-}
+// Presentation Request for Registration
+httpsApp.get('/IssuerRequest', (req, res) => {
+  const sdJwt = fs.readFileSync(path.resolve(__dirname, "thingDescription_presentation_definition.json"), 'utf8');
+  res.send(sdJwt)
+});
 
-const tdStorage = {
-  "did:web:phamkv.github.io:things:thing1": {
-    "@context": "https://www.w3.org/2022/wot/td/v1.1",
-    "@type": "saref:LightSwitch",
-    "id": "did:web:phamkv.github.io:things:thing1",
-    "title": "MyLampThing",
-    "securityDefinitions": {
-        "nosec_sc": {"scheme": "nosec"}
-    },
-    "security": "nosec_sc",
-    "properties": {
-        "status": {
-            "type": "string",
-            "forms": [{"href": "http://localhost:8080/lightswitch/properties/status"}]
-        }
-    },
-    "actions": {
-        "toggle": {
-            "forms": [{"href": "http://localhost:8080/lightswitch/actions/toggle"}]
-        }
-    },
-    "events": {}
+// DIDComm Presentation Submission for Retrieval
+httpsApp.post('/', (req, res, next) => {
+  const contentType = req.headers['content-type'];
+  console.log(contentType)
+  if (contentType !== 'application/didcomm-encrypted+json')
+    return res.status(415).send('Unsupported Media Type');
+  next();
+}, async (req, res) => {
+  try {
+    perf_hooks.performance.mark('start');
+    const unpacked = await verifyCredential(req.body)
+    // Credential verified and valid according to the presentation definition
+    // Retrieval will be processed now
+    processMessage(unpacked, res)
+    perf_hooks.performance.mark('end');
+    const duration = perf_hooks.performance.measure(unpacked.msg.body.method, 'start', 'end');
+  } catch (error) {
+    console.log(error)
+    res.send(error)
   }
-} // Simple hashmap storage for demo
+});
+
+// Status List(s) of Issuer
+httpsApp.get('/statuslists/:id', (req, res) => {
+  const id = req.params.id;
+  const statusList = fs.readFileSync(path.resolve(__dirname, `status_list${id}.txt`), 'utf8');
+  res.send(statusList)
+});
+
+// Status List(s) of Issuer
+app.get('/deleteThing1', async (req, res) => {
+  try {
+    perf_hooks.performance.mark('del_start');
+    const obj = {
+      body: {
+        method: "TDDDeletion",
+        things: ["did:web:phamkv.github.io:things:thing1"]
+      }
+    }
+    const sending = await messageClient.createMessage("did:web:phamkv.github.io:service:discovery", obj)
+    const endpoint = "https://localhost:3000/"
+    const response = await instance.post(endpoint, sending, {
+      headers: {
+        'content-type': 'application/didcomm-encrypted+json'
+      },
+    });
+    perf_hooks.performance.mark('del_end');
+    const del_duration = perf_hooks.performance.measure("Deletion", 'del_start', 'del_end');
+    durationArray.push(del_duration)
+    // outputMeasurement()
+    console.log(response.data)
+    res.send("Please check the consoles")
+  } catch(error) {
+    res.sendStatus(500)
+  }
+});
+
+server.listen(4000, () => {
+  console.log(`Issuer1 is listening at https://localhost:${port}`);
+  console.log(`For DEMO: The entry of Thing1 in the TDD can be deleted using this RPC: https://localhost:${port}/deleteThing1`)
+});
+
+app.listen(port, () => {
+  console.log(`Issuer1 is listening at http://localhost:${port}`);
+  console.log(`For DEMO: The entry of Thing1 in the TDD can be deleted using this RPC: https://localhost:${port}/deleteThing1`)
+});
+
+// Functions
+
+const outputMeasurement = () => {
+  const data = durationArray.map(pm => pm.duration).join("\n")
+
+  fs.writeFile(path.resolve(__dirname, "output.txt"), data, (err) => {
+    if (err) {
+      console.error('Error writing to file:', err);
+    } else {
+      console.log('Array has been written to the file.');
+    }
+  });
+}
 
 const retrieveThingDescriptions = async (dids) => { // stub for retrieving
   const result = [];
@@ -130,7 +190,6 @@ const verifyCredential = async (encryptedMessage) => {
   }
 }
 
-const durationArray = []
 const processMessage = async (unpacked, res) => {
   const { cred, msg } = unpacked
   try {
@@ -159,86 +218,36 @@ const processMessage = async (unpacked, res) => {
   }
 }
 
-// Presentation Request for Registration
-app.get('/IssuerRequest', (req, res) => {
-  const sdJwt = fs.readFileSync(path.resolve(__dirname, "thingDescription_presentation_definition.json"), 'utf8');
-  res.send(sdJwt)
-});
-
-// DIDComm Presentation Submission for Retrieval
-app.post('/', (req, res, next) => {
-  const contentType = req.headers['content-type'];
-  console.log(contentType)
-  if (contentType !== 'application/didcomm-encrypted+json')
-    return res.status(415).send('Unsupported Media Type');
-  next();
-}, async (req, res) => {
-  try {
-    perf_hooks.performance.mark('start');
-    const unpacked = await verifyCredential(req.body)
-    // Credential verified and valid according to the presentation definition
-    // Retrieval will be processed now
-    processMessage(unpacked, res)
-    perf_hooks.performance.mark('end');
-    const duration = perf_hooks.performance.measure(unpacked.msg.body.method, 'start', 'end');
-  } catch (error) {
-    console.log(error)
-    res.send(error)
-  }
-});
-
-// Status List(s) of Issuer
-app.get('/statuslists/:id', (req, res) => {
-  const id = req.params.id;
-  const statusList = fs.readFileSync(path.resolve(__dirname, `status_list${id}.txt`), 'utf8');
-  res.send(statusList)
-});
-
-// Status List(s) of Issuer
-app.get('/deleteThing1', async (req, res) => {
-  try {
-    perf_hooks.performance.mark('del_start');
-    const obj = {
-      body: {
-        method: "TDDDeletion",
-        things: ["did:web:phamkv.github.io:things:thing1"]
-      }
-    }
-    const sending = await messageClient.createMessage("did:web:phamkv.github.io:service:discovery", obj)
-    const endpoint = "https://localhost:3000/"
-    const response = await instance.post(endpoint, sending, {
-      headers: {
-        'content-type': 'application/didcomm-encrypted+json'
-      },
-    });
-    perf_hooks.performance.mark('del_end');
-    const del_duration = perf_hooks.performance.measure("Deletion", 'del_start', 'del_end');
-    durationArray.push(del_duration)
-    // outputMeasurement()
-    console.log(response.data)
-    res.send("Please check the consoles")
-  } catch(error) {
-    res.sendStatus(500)
-  }
-});
-
-server.listen(port, () => {
-  console.log(`Issuer1 is listening at https://localhost:${port}`);
-  console.log(`For DEMO: The entry of Thing1 in the TDD can be deleted using this RPC: https://localhost:${port}/deleteThing1`)
-});
-
-const outputMeasurement = () => {
-  const data = durationArray.map(pm => pm.duration).join("\n")
-
-  fs.writeFile(path.resolve(__dirname, "output.txt"), data, (err) => {
-    if (err) {
-      console.error('Error writing to file:', err);
-    } else {
-      console.log('Array has been written to the file.');
-    }
-  });
+function parseJwt (token) {
+  return JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
 }
 
+const tdStorage = {
+  "did:web:phamkv.github.io:things:thing1": {
+    "@context": "https://www.w3.org/2022/wot/td/v1.1",
+    "@type": "saref:LightSwitch",
+    "id": "did:web:phamkv.github.io:things:thing1",
+    "title": "MyLampThing",
+    "securityDefinitions": {
+        "nosec_sc": {"scheme": "nosec"}
+    },
+    "security": "nosec_sc",
+    "properties": {
+        "status": {
+            "type": "string",
+            "forms": [{"href": "http://localhost:8080/lightswitch/properties/status"}]
+        }
+    },
+    "actions": {
+        "toggle": {
+            "forms": [{"href": "http://localhost:8080/lightswitch/actions/toggle"}]
+        }
+    },
+    "events": {}
+  }
+} // Simple hashmap storage for demo
+
+/*
 app.get('/', (req, res) => {
   const contentType = req.headers['content-type'];
   console.log(contentType)
@@ -277,3 +286,4 @@ app.get('/', (req, res) => {
     res.send("Hello World!")
   }
 });
+*/

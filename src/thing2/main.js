@@ -266,7 +266,7 @@ const processMessage = async (msg) => {
   }
   setTimeout(function (){
     printSteps()           
-  }, 1000)
+  }, 1500)
 }
 
 const printSteps = () => {

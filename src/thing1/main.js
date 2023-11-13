@@ -125,7 +125,7 @@ app.get("/registrationDemo", async (req, res) => {
   setTimeout(() => {
     const prettyLog = generateLogs()
     res.send(prettyLog);
-  }, 500)
+  }, 1000)
 });
 
 app.listen(port, async () => {

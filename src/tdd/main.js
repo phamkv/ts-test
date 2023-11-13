@@ -6,6 +6,7 @@ import jp from "jsonpath"
 import fs from "fs"
 import {fileURLToPath} from 'url';
 import path from "path"
+import * as winston from "winston"
 import { MessageClient } from "../utils/comm/commMessage.js";
 import { TDD_SECRETS } from "../utils/comm/test-vectors.js";
 import { verifySdJwt } from '../utils/sd-jwt/verify-sd-jwt.js';
@@ -15,7 +16,11 @@ import * as sm from "express-status-monitor"
 const statusMonitor = sm.default()
 
 const app = express();
-const port = 3000;
+const httpsApp = express();
+httpsApp.use(express.json());
+httpsApp.use(bodyParser.text({ type: 'application/didcomm-encrypted+json' }));
+
+const port = 3005;
 app.use(statusMonitor);
 app.use(express.json());
 app.use(bodyParser.text({ type: 'application/didcomm-encrypted+json' }));
@@ -37,17 +42,85 @@ const observer = new perf_hooks.PerformanceObserver((list) => {
   });
 });
 observer.observe({ entryTypes: ["measure"], buffer: true })
+const durationArray = []
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.resolve(__filename, "..");
 // HTTPS Cert
 const key = fs.readFileSync(path.resolve(__dirname, "./key.pem"));
 const cert = fs.readFileSync(path.resolve(__dirname, "./cert.pem"));
-const server = https.createServer({key: key, cert: cert }, app);
+const server = https.createServer({key: key, cert: cert }, httpsApp);
 
-function parseJwt (token) {
-  return JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-}
+const logger = winston.createLogger({
+  level: "debug",
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.File({ filename: path.resolve(__dirname, "error.log"), level: "warn" }),
+    new winston.transports.File({ filename: path.resolve(__dirname, "app.log"), options: { flags: 'w' }}),
+  ],
+});
+
+// DIDComm Presentation Submission for Registration
+httpsApp.post('/', (req, res, next) => {
+  const contentType = req.headers['content-type'];
+  if (contentType !== 'application/didcomm-encrypted+json')
+    return res.status(415).send('Unsupported Media Type');
+  next();
+}, async (req, res) => {
+  try {
+    logger.debug("===========================================")
+    logger.info("Received incoming DIDComm Message")
+    perf_hooks.performance.mark('start');
+    const unpacked = await verifyCredential(req.body)
+    logger.info("VC is successfully verified, processing Message...")
+    // Credential verified and valid according to the presentation definition
+    processMessage(unpacked, res)
+    perf_hooks.performance.mark('end');
+    const duration = perf_hooks.performance.measure(unpacked.msg.body.method, 'start', 'end');
+    // durationArray.push(duration)
+  } catch (error) {
+    logger.error(error)
+    res.status(406).send(error)
+  }
+});
+
+// Presentation Request for Registration
+httpsApp.get('/TDDRegistration', (req, res) => {
+  const sdJwt = fs.readFileSync(path.resolve(__dirname, "registration_presentation_definition.json"), 'utf8');
+  res.send(sdJwt)
+});
+
+
+// Presentation Request for TD Query
+httpsApp.get('/TDDQuery', (req, res, next) => {
+  const sdJwt = fs.readFileSync(path.resolve(__dirname, "query_presentation_definition.json"), 'utf8');
+  res.send(sdJwt)
+});
+
+app.get('/', (req, res) => {
+  const prettyLog = generateLogs()
+  res.send(prettyLog);
+})
+
+app.get('/status', statusMonitor.pageRoute)
+
+app.get('/memoryCapture', (req, res) => {
+  res.send(process.memoryUsage())
+  // outputMeasurement()
+})
+
+server.listen(3000, () => {
+  logger.debug(`Thing Description Directory is listening at https://localhost:${port}`);
+});
+
+app.listen(port, async () => {
+  logger.debug(`TDD (RPC FUNCTIONS) is listening at http://localhost:${port}`);
+});
+
+// Functions
 
 const tdStorage = {} // Simple hashmap storage for demo
 const registerThing = (thingDescription) => { // stub for storaging
@@ -65,9 +138,12 @@ const queryThings = (types) => { // stub for querying
   return filteredThings;
 }
 
-const deleteThing = (thingId) => { // stub for deletion
+const deleteThing = (thingId, issuer) => { // stub for deletion
   if (tdStorage[thingId]) {
-    console.log(`Deleting ${thingId}...`)
+    if (tdStorage[thingId].iss !== issuer) {
+      logger.info("Deleting Thing does not belong to the corresponding Issuer")
+    }
+    logger.info(`Deleting ${thingId}...`)
     delete tdStorage[thingId]
   }
 }
@@ -76,16 +152,18 @@ const verifyStatus = async (cred) => {
   const uri = cred.jwt.status.uri
   const response = await instance.get(uri)
   const statusListJwt = parseJwt(response.data)
-
+  logger.debug("Status List Token:")
+  logger.debug(statusListJwt)
   const { bits, lst } = statusListJwt.status_list
   const bitArray = statusListBaseToBitArray(lst)
   const statusCode = getStatusCode(bitArray, cred.jwt.status.idx, bits)
-  // console.log(statusCode)
+  logger.debug("Status Code of VC is:")
+  logger.debug(statusCode)
   if (statusCode === 0) {
-    console.log("Credential Status valid")
+    logger.info("Credential Status valid")
     return true
   } else if (statusCode === 1) {
-    // console.log("Credential Status invalid")
+    logger.info("Credential Status revoked")
     return false
   } else {
     return true // further cases can be handled here
@@ -96,11 +174,11 @@ const verifyCredential = async (encryptedMessage) => {
   try {
     // Handle Registration (sd-jwt verification and storing)
     const msg = await messageClient.unpackMessage(encryptedMessage)
-    console.log(msg)
+    logger.info("Reading in DIDComm Message...")
+    logger.debug(msg)
     const presentationSubmission = msg.presentation_submission
-    console.log(presentationSubmission)
-    console.log(msg)
     if (!presentationSubmission && msg.body.method === "TDDDeletion") {
+      logger.info("Deletion Request received, skipping verifying of VC...")
       return {
         cred: {},
         msg: msg
@@ -109,12 +187,15 @@ const verifyCredential = async (encryptedMessage) => {
 
     perf_hooks.performance.mark('vc_start');
     const verfiableCredentials = presentationSubmission.descriptor_map.map(vc => jp.query(msg, vc.path)[0])
-    // console.log(verfiableCredentials)
     const sdJwt = verfiableCredentials[0].payload
 
-    const jwksBytes = await resolvePublicKeyWeb(parseJwt(sdJwt).iss)
-
+    logger.info("Veriyfing SD-JWT credential...")
+    const raw = parseJwt(sdJwt)
+    logger.debug(raw)
+    logger.debug("Resolving Issuer's public key from DID")
+    const jwksBytes = await resolvePublicKeyWeb(raw.iss)
     const rv = await verifySdJwt(sdJwt, jwksBytes)
+    logger.info("SD-JWT signature is valid:")
     perf_hooks.performance.mark('vc_end');
     const vc_duration = perf_hooks.performance.measure("VC verification", 'vc_start', 'vc_end');
     durationArray.push(vc_duration)
@@ -123,8 +204,10 @@ const verifyCredential = async (encryptedMessage) => {
       jwt: JSON.parse(rv.jwt),
       disclosed: JSON.parse(rv.disclosed)
     }
+    logger.info(cred)
 
     if (cred.jwt.status) {
+      logger.info("VC contains Status List, checking status code...")
       perf_hooks.performance.mark('status_start');
       const status = await verifyStatus(cred)
       if (!status) {
@@ -134,6 +217,7 @@ const verifyCredential = async (encryptedMessage) => {
       const duration = perf_hooks.performance.measure("Status Check", 'status_start', 'status_end');
     }
     
+    logger.info("Checking if SD-JWT discloses claims needed as defined in the Presentation Definition...")
     let jspath
     if (msg.body.method === "TDDRegistration") {
       jspath = [
@@ -152,18 +236,18 @@ const verifyCredential = async (encryptedMessage) => {
       jspath = []
     }
 
-    console.log(cred)
-
+    logger.debug(jspath)
     for (let path of jspath) {
       try {
         if (jp.query(cred, path).length < 1 ) {
           throw "Credential does not have the required attributes"
         }
       } catch (error) {
-        console.log(error)
+        logger.error(error)
         throw error
       }
     }
+    logger.info("SD-JWT is valid")
     return { cred, msg }
   } catch (error) {
     throw error
@@ -172,15 +256,21 @@ const verifyCredential = async (encryptedMessage) => {
 
 const processMessage = async (unpacked, res) => {
   const { cred, msg } = unpacked
+  logger.info("Checking for type of request:")
+  logger.debug(msg.body.method)
   try {
     if (msg.body.method === "TDDRegistration") {
+      logger.info("Registering Thing:")
       const thingDescription = {
         iss: cred.jwt.iss,
         ...cred.disclosed
       }
+      logger.debug(thingDescription)
       registerThing(thingDescription)
       res.sendStatus(202)
     } else if (msg.body.method === "TDDQuery") {
+      logger.info("Querying the requested type of Things:")
+      logger.info(msg.body["types"])
       const things = queryThings(msg.body["types"])
       const obj = {
         id: msg.id,
@@ -188,6 +278,7 @@ const processMessage = async (unpacked, res) => {
           query: things
         }
       }
+      logger.debug(obj)
     
       res.sendStatus(202)
       const sending = await messageClient.createMessage(msg.from, obj)
@@ -197,9 +288,12 @@ const processMessage = async (unpacked, res) => {
           'content-type': 'application/didcomm-encrypted+json'
         },
       });
+      logger.info("Sending DIDComm Message as response back to requesting Thing")
     } else if (msg.body.method === "TDDDeletion") {
+      logger.info("Deleting entries of the following Things:")
+      logger.info(msg.body.things)
       for (const thingId of msg.body.things) {
-        deleteThing(thingId)
+        deleteThing(thingId, msg.from)
       }
       res.sendStatus(202)
     } else {
@@ -210,54 +304,9 @@ const processMessage = async (unpacked, res) => {
   }
 }
 
-// Test
-const durationArray = []
-
-// DIDComm Presentation Submission for Registration
-app.post('/', (req, res, next) => {
-  const contentType = req.headers['content-type'];
-  console.log(contentType)
-  if (contentType !== 'application/didcomm-encrypted+json')
-    return res.status(415).send('Unsupported Media Type');
-  next();
-}, async (req, res) => {
-  try {
-    // console.log(req)
-    perf_hooks.performance.mark('start');
-    const unpacked = await verifyCredential(req.body)
-    // console.log(cred)
-    // console.log(msg)
-    // Credential verified and valid according to the presentation definition
-    // Registration will be processed now
-    processMessage(unpacked, res)
-    perf_hooks.performance.mark('end');
-    const duration = perf_hooks.performance.measure(unpacked.msg.body.method, 'start', 'end');
-    // durationArray.push(duration)
-  } catch (error) {
-    console.log(error)
-    res.status(406).send(error)
-  }
-});
-
-// Presentation Request for Registration
-app.get('/TDDRegistration', (req, res) => {
-  const sdJwt = fs.readFileSync(path.resolve(__dirname, "registration_presentation_definition.json"), 'utf8');
-  res.send(sdJwt)
-});
-
-
-// Presentation Request for TD Query
-app.get('/TDDQuery', (req, res, next) => {
-  const sdJwt = fs.readFileSync(path.resolve(__dirname, "query_presentation_definition.json"), 'utf8');
-  res.send(sdJwt)
-});
-
-app.get('/status', statusMonitor.pageRoute)
-
-app.get('/memoryCapture', (req, res) => {
-  res.send(process.memoryUsage())
-  // outputMeasurement()
-})
+function parseJwt (token) {
+  return JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+}
 
 const outputMeasurement = () => {
   const data = durationArray.map(pm => pm.duration).join("\n")
@@ -271,12 +320,38 @@ const outputMeasurement = () => {
   });
 }
 
-server.listen(port, () => {
-  console.log(`Thing Description Directory is listening at https://localhost:${port}`);
-});
+const generateLogs = () => {
+  const log = fs.readFileSync(path.resolve(__dirname, "app.log"), 'utf-8');
+  const logEntries = log.trim().split('\n').map(line => JSON.parse(line));
+  // Convert log entries to a pretty format
+  const prettyLog = logEntries.map(entry => {
+    let message = entry.message;
+    // Check if the message is an object and stringify it if so
+    if (message && typeof message === 'object') {
+        message = '<pre>' + JSON.stringify(message, null, 2) + '</pre>';
+    }
+    return `[${entry.timestamp}] ${entry.level.toUpperCase()}: ${message}`;
+  }).join('<br>');
+  return cssStyles + '<pre>' + prettyLog + '</pre>'
+}
 
+const cssStyles = `
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        line-height: 1.5;
+    }
+    pre {
+        white-space: pre-wrap;       /* Since CSS 2.1 */
+        white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+        white-space: -pre-wrap;      /* Opera 4-6 */
+        white-space: -o-pre-wrap;    /* Opera 7 */
+        word-wrap: break-word;       /* Internet Explorer 5.5+ */
+    }
+</style>
+`;
 
-
+/*
 app.get('/', (req, res) => {
   const contentType = req.headers['content-type'];
   console.log(contentType)
@@ -315,3 +390,4 @@ app.get('/', (req, res) => {
     res.send("Hello World!")
   }
 });
+*/
