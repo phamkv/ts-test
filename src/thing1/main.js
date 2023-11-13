@@ -8,6 +8,7 @@ import { MessageClient } from "../utils/comm/commMessage.js";
 import { THING1_SECRETS } from "../utils/comm/test-vectors.js";
 import { discloseClaims } from "../utils/sd-jwt/disclose-claims.js";
 import { startThingExample } from "../utils/wot/wot.js";
+import * as winston from "winston"
 
 const app = express();
 const port = 4001;
@@ -28,25 +29,37 @@ const observer = new perf_hooks.PerformanceObserver((list) => {
   });
 });
 observer.observe({ entryTypes: ["measure"], buffer: true })
+const durationArray = []
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.resolve(__filename, "..");
 
 const sdJwt = fs.readFileSync(path.resolve(__dirname, "sd-jwt-test.json"), 'utf8');
 
-const durationArray = []
+const logger = winston.createLogger({
+  level: "debug",
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.File({ filename: path.resolve(__dirname, "error.log"), level: "warn" }),
+    new winston.transports.File({ filename: path.resolve(__dirname, "app.log"), options: { flags: 'w' }}),
+  ],
+});
 
 async function registerThing(url, DIDReceiver) {
   try {
     perf_hooks.performance.mark('start');
     // Step 1: Make the first request and await its response
+    logger.info("Step 1: Retrieving Presentation Definition...")
     const response1 = await instance.get(url + "TDDRegistration");
     const definition = response1.data;
-    console.log('Step 1 response:', definition);
+    logger.info('Step 1 response:');
+    logger.info(definition)
 
     // Set disclosed attributes according to definition
     const constraints = definition.presentation_definition.input_descriptors[0].constraints.fields[0].path
-    console.log(constraints)
     const claims = constraints.filter(element => element.includes("$.disclosed")).map(str => {
       const parts = str.split('.')
       let propName = parts[parts.length - 1]
@@ -55,7 +68,9 @@ async function registerThing(url, DIDReceiver) {
         propName = propName.replace("disclosed", '')
       }
       return propName
-    }) // ["id", "title", "@type", "security"]
+    }) 
+    logger.debug("Disclosing the following claims as per Presentation Definition:")
+    logger.debug(claims) // ["id", "title", "@type", "security"]
     const outSdJwt = await discloseClaims(sdJwt, claims);
     const obj = {
       verifiable_credential: [{
@@ -77,11 +92,15 @@ async function registerThing(url, DIDReceiver) {
         types: ["saref:LightSwitch", "saref:Light", "saref:LightingDevice"]
       }
     }
-    console.log(obj)
+    logger.info("Step 2: Preparing DIDComm Message with Presentation Submission and attached Verifiable Credential...")
+    logger.debug("The JWT in the VC payload can be decoded using this parser: https://sdjwt.info/")
+    logger.info(obj)
 
     // Send DIDMessage
+    logger.info("The encrypted DIDComm Message:")
     const body = await messageClient.createMessage(DIDReceiver, obj)
-    console.log(body)
+    logger.info(JSON.parse(body))
+    logger.info("Step 2: Sending encrypted DIDComm Message through HTTPS to TD Directory...")
     const response2 = await instance.post(url, body, {
       headers: {
         'Content-Type': 'application/didcomm-encrypted+json'
@@ -90,10 +109,11 @@ async function registerThing(url, DIDReceiver) {
     perf_hooks.performance.mark('end');
     const duration = perf_hooks.performance.measure("Registration Thing1", 'start', 'end');
     durationArray.push(duration)
-    console.log('Step 2 response:', response2.data);
+    logger.debug(response2.data)
+    logger.info('Step 2: Registration DIDComm successfully accepted by TD Directory');
     return response2
   } catch (error) {
-    console.error('An error occurred:', error);
+    logger.error(error);
   }
 }
 
@@ -102,19 +122,24 @@ app.get("/registrationDemo", async (req, res) => {
   const tddDID = "did:web:phamkv.github.io:service:discovery"
   const response = await registerThing('https://localhost:3000/', tddDID);
   // outputMeasurement()
-  printSteps()
-  res.send("Please look into the console")
+  setTimeout(() => {
+    const prettyLog = generateLogs()
+
+    // Send the pretty log as response
+    res.send(prettyLog);
+  }, 500)
 });
 
 app.listen(port, async () => {
-  console.log(`Thing1 is listening at http://localhost:${port}`);
+  logger.debug(`Thing1 is listening at http://localhost:${port}`);
   await startThingExample();
   printSteps();
 });
 
 const printSteps = () => {
-  console.log("======Execute the demo by sending the follwing RPCs=======")
-  console.log(`http://localhost:${port}/registrationDemo`);
+  const hi = "Hallo"
+  logger.info("======Execute the demo by sending the follwing RPCs=======")
+  logger.info(`http://localhost:${port}/registrationDemo`);
 }
 
 const outputMeasurement = () => {
@@ -122,9 +147,40 @@ const outputMeasurement = () => {
 
   fs.writeFile(path.resolve(__dirname, "output.txt"), data, (err) => {
     if (err) {
-      console.error('Error writing to file:', err);
+      logger.error('Error writing to file:', err);
     } else {
-      console.log('Array has been written to the file.');
+      logger.silly('Array has been written to the file.');
     }
   });
 }
+
+const generateLogs = () => {
+  const log = fs.readFileSync(path.resolve(__dirname, "app.log"), 'utf-8');
+  const logEntries = log.trim().split('\n').map(line => JSON.parse(line));
+  // Convert log entries to a pretty format
+  const prettyLog = logEntries.map(entry => {
+    let message = entry.message;
+    // Check if the message is an object and stringify it if so
+    if (message && typeof message === 'object') {
+        message = '<pre>' + JSON.stringify(message, null, 2) + '</pre>';
+    }
+    return `[${entry.timestamp}] ${entry.level.toUpperCase()}: ${message}`;
+  }).join('<br>');
+  return cssStyles + '<pre>' + prettyLog + '</pre>'
+}
+
+const cssStyles = `
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        line-height: 1.5;
+    }
+    pre {
+        white-space: pre-wrap;       /* Since CSS 2.1 */
+        white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+        white-space: -pre-wrap;      /* Opera 4-6 */
+        white-space: -o-pre-wrap;    /* Opera 7 */
+        word-wrap: break-word;       /* Internet Explorer 5.5+ */
+    }
+</style>
+`;

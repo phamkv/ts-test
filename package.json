@@ -24,7 +24,8 @@
     "jose": "^4.15.1",
     "jsonpath": "^1.1.1",
     "perf_hooks": "^0.0.1",
-    "web-did-resolver": "^2.0.27"
+    "web-did-resolver": "^2.0.27",
+    "winston": "^3.11.0"
   },
   "devDependencies": {
     "@types/node": "^20.6.1"
