@@ -124,14 +124,12 @@ app.get("/registrationDemo", async (req, res) => {
   // outputMeasurement()
   setTimeout(() => {
     const prettyLog = generateLogs()
-
-    // Send the pretty log as response
     res.send(prettyLog);
   }, 500)
 });
 
 app.listen(port, async () => {
-  logger.debug(`Thing1 is listening at http://localhost:${port}`);
+  logger.debug(`Thing1 (RPC FUNCTIONS) is listening at http://localhost:${port}`);
   await startThingExample();
   printSteps();
 });

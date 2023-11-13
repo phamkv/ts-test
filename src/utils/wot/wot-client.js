@@ -32,6 +32,7 @@ export const wotThingExample = async (url) => {
             const read1 = await thing.readProperty("status");
             console.log("switch value is", await read1.value());
 
+            console.log("Toggling the Light Switch...")
             // toggle property
             await thing.invokeAction("toggle");
             const read2 = await thing.readProperty("status");

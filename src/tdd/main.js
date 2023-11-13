@@ -191,7 +191,7 @@ const processMessage = async (unpacked, res) => {
     
       res.sendStatus(202)
       const sending = await messageClient.createMessage(msg.from, obj)
-      const endpoint = "https://localhost:4002/"
+      const endpoint = "https://localhost:5002/"
       instance.post(endpoint, sending, {
         headers: {
           'content-type': 'application/didcomm-encrypted+json'
