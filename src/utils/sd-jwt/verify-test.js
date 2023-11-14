@@ -10,7 +10,7 @@ import fs from "fs"
 } */
 
 const sdJwt = "closed-jwt-test.json" // path not needed
-const publicJWK = "src/comm/test/jwks1.json" // json needs to be retrived from resolver
+const publicJWK = "src/utils/comm/test/jwks1.json" // json needs to be retrived from resolver
 const outJwt = "out-jwt.json" // path not needed
 const outClaims = "out-claims.json" // path not needed
 

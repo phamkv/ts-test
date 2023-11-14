@@ -4,7 +4,7 @@ export const LOG_LEVEL = {
     ERROR: 2
 }
 
-const DEFAULT_LOG_LEVEL = LOG_LEVEL.DEBUG;
+const DEFAULT_LOG_LEVEL = LOG_LEVEL.INFO;
 
 export function Log(message, level = LOG_LEVEL.INFO) {
     if (level >= DEFAULT_LOG_LEVEL) {
