@@ -21,7 +21,9 @@ httpsApp.use(bodyParser.text({ type: 'application/didcomm-encrypted+json' }));
 
 // ONLY FOR DEMO / DEVELOPMENT PURPOSES
 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
-const instance = axios.create({ httpsAgent })
+const instance = axios.create({ httpsAgent, validateStatus: function (status) {
+  return status < 500;
+}})
 
 const DIDSender = "did:web:phamkv.github.io:things:thing2"
 const messageClient = new MessageClient(DIDSender, THING2_SECRETS)
@@ -46,7 +48,7 @@ const httpsServer = https.createServer({ key: key, cert: cert }, httpsApp);
 
 const sdJwt = fs.readFileSync(path.resolve(__dirname, "sd-jwt-test.json"), 'utf8');
 
-const logger = winston.createLogger({
+let logger = winston.createLogger({
   level: "debug",
   format: winston.format.combine(
     winston.format.timestamp(),
@@ -68,6 +70,11 @@ const sLogger = winston.createLogger({
     new winston.transports.File({ filename: path.resolve(__dirname, "misc.log"), options: { flags: 'w' }}),
   ],
 });
+
+const outgoing = process.env.THING2 || "localhost"
+const thing1 = process.env.THING1 || "localhost"
+const issuer1 = process.env.ISS1 || "localhost"
+const tdd = process.env.TDD || "localhost"
 
 const openRequests = {}
 let thingDescriptionsTDD = []
@@ -95,6 +102,7 @@ httpsApp.post('/', (req, res, next) => {
 
 // RPC Function for Demo
 app.get("/queryDemo", (req, res) => {
+  clearLog()
   logger.info("Retrieving things matching the types from a Thing Description Discovery Service")
   const payload1 = {
     method: "TDDQuery",
@@ -104,16 +112,15 @@ app.get("/queryDemo", (req, res) => {
   logger.debug(payload1)
   const tddDID = "did:web:phamkv.github.io:service:discovery"
   logger.debug(tddDID)
-  queryProtocolPresentationExchange(tddDID, 'https://localhost:3000/', payload1)
+  queryProtocolPresentationExchange(tddDID, `https://${tdd}:3000/`, payload1)
   setTimeout(() => {
     const prettyLog = generateLogs("app.log")
     res.send(prettyLog);
-  }, 1000)
+  }, 2000)
 });
 
-// RPC Function for Demo
+// RPC Function for Demo - Retrieve full Thing Description from Issuer
 app.get("/issuerRequestDemo", (req, res) => {
-  // Retrieve full Thing Description from Issuer
   sLogger.info("Doing similiar work (creating DIDComm Message) to authenticate to Issuer1 for requesting TD of Thing1...")
   const thingInfo = {
     method: "IssuerRequest",
@@ -123,7 +130,7 @@ app.get("/issuerRequestDemo", (req, res) => {
   sLogger.info(thingInfo)
   const issuer1DID = "did:web:phamkv.github.io:issuer:manufacturer1"
   sLogger.debug(issuer1DID)
-  queryProtocolPresentationExchange(issuer1DID, 'https://localhost:4000/', thingInfo)
+  queryProtocolPresentationExchange(issuer1DID, `https://${issuer1}:4000/`, thingInfo)
   setTimeout(() => {
     const prettyLog = generateLogs("misc.log")
     res.send(prettyLog);
@@ -139,7 +146,7 @@ app.get("/thingConsumptionDemo", async (req, res) => {
   res.send("Please look into the console of Thing2")
 });
 
-// RPC Function for Demo
+// RPC Function for Demo (not working in Docker mode)
 app.get("/tddStressTest", async (req, res) => {
   // Retrieve things matching the types from a Thing Description Discovery Service
   const response = await instance.get('https://localhost:3000/memoryCapture');  
@@ -155,7 +162,7 @@ app.get("/tddStressTest", async (req, res) => {
 });
 
 httpsServer.listen(5002, () => {
-  logger.debug(`Thing2 is listening at https://localhost:5002`);
+  logger.debug(`Thing2 is listening at https://${outgoing}:5002`);
 });
 
 app.listen(port, async () => {
@@ -229,7 +236,7 @@ async function queryProtocolPresentationExchange(DIDReceiver, serviceEndpoint, b
       },
     });
     // logger.debug(response2.data)
-    logger.info('Step 2: Registration DIDComm successfully accepted by TD Directory')
+    logger.info('Step 2: Query DIDComm successfully accepted by TD Directory')
     return
   } catch (error) {
     console.error('An error occurred:', error);
@@ -294,12 +301,9 @@ async function delayedLoop(iterations) {
         queryProtocolPresentationExchange(tddDID, 'https://localhost:3000/', payload1)
       }
       i++;
-      // Call the loop function again after a 1-second delay
-      setTimeout(loop, 3000); // 1000 milliseconds = 1 second
+      setTimeout(loop, 3000);
     }
   }
-
-  // Start the loop
   loop();
 }
 
@@ -345,3 +349,17 @@ const cssStyles = `
     }
 </style>
 `;
+
+const clearLog = () => {
+  logger = winston.createLogger({
+    level: "debug",
+    format: winston.format.combine(
+      winston.format.timestamp(),
+      winston.format.json()
+    ),
+    transports: [
+      new winston.transports.File({ filename: path.resolve(__dirname, "error.log"), level: "warn" }),
+      new winston.transports.File({ filename: path.resolve(__dirname, "app.log"), options: { flags: 'w' }}),
+    ],
+  });
+}

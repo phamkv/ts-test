@@ -1,5 +1,50 @@
+version: '3.8'
+
 services:
-  web:
-    build: .
+  issuer1:
+    image: pham_implementation:latest
+    environment:
+      - SERVICE_NAME=issuer1
+      - ISS1=issuer1
+      - TDD=tdd
+      - THING1=thing1
+      - THING2=thing2
     ports:
-      - "5000:5000"
+      - "3004:3004"
+      - "4000:4000"
+
+  thing1:
+    image: pham_implementation:latest
+    environment:
+      - SERVICE_NAME=thing1
+      - ISS1=issuer1
+      - TDD=tdd
+      - THING1=thing1
+      - THING2=thing2
+    ports:
+      - "4001:4001"
+      - "8080:8080"
+
+  thing2:
+    image: pham_implementation:latest
+    environment:
+      - SERVICE_NAME=thing2
+      - ISS1=issuer1
+      - TDD=tdd
+      - THING1=thing1
+      - THING2=thing2
+    ports:
+      - "5002:5002"
+      - "4002:4002"
+
+  tdd:
+    image: pham_implementation:latest
+    environment:
+      - SERVICE_NAME=tdd
+      - ISS1=issuer1
+      - TDD=tdd
+      - THING1=thing1
+      - THING2=thing2
+    ports:
+      - "3000:3000"
+      - "3005:3005"

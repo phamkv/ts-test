@@ -15,7 +15,9 @@ const port = 4001;
 
 // ONLY FOR DEMO / DEVELOPMENT PURPOSES
 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
-const instance = axios.create({ httpsAgent })
+const instance = axios.create({ httpsAgent, validateStatus: function (status) {
+  return status < 500;
+}})
 
 const DIDSender = "did:web:phamkv.github.io:things:thing1"
 const messageClient = new MessageClient(DIDSender, THING1_SECRETS)
@@ -33,10 +35,9 @@ const durationArray = []
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.resolve(__filename, "..");
+let sdJwt;
 
-const sdJwt = fs.readFileSync(path.resolve(__dirname, "sd-jwt-test.json"), 'utf8');
-
-const logger = winston.createLogger({
+let logger = winston.createLogger({
   level: "debug",
   format: winston.format.combine(
     winston.format.timestamp(),
@@ -46,6 +47,55 @@ const logger = winston.createLogger({
     new winston.transports.File({ filename: path.resolve(__dirname, "error.log"), level: "warn" }),
     new winston.transports.File({ filename: path.resolve(__dirname, "app.log"), options: { flags: 'w' }}),
   ],
+});
+
+const tdd = process.env.TDD || "localhost"
+
+app.get("/registrationDemo", async (req, res) => {
+  // Consume TD and send test request to Thing1
+  sdJwt = fs.readFileSync(path.resolve(__dirname, "sd-jwt_valid_example.json"), 'utf8');
+  const tddDID = "did:web:phamkv.github.io:service:discovery"
+  const response = await registerThing(`https://${tdd}:3000/`, tddDID);
+  // outputMeasurement()
+  setTimeout(() => {
+    const prettyLog = generateLogs("app.log")
+    res.send(prettyLog);
+  }, 1500)
+});
+
+app.get("/revokedStatusDemo", async (req, res) => {
+  // Consume TD and send test request to Thing1
+  sdJwt = fs.readFileSync(path.resolve(__dirname, "sd-jwt_revoked.json"), 'utf8');
+  clearLog()
+  const tddDID = "did:web:phamkv.github.io:service:discovery"
+  const response = await registerThing(`https://${tdd}:3000/`, tddDID);
+  setTimeout(() => {
+    const prettyLog = generateLogs("app.log")
+    res.send(prettyLog);
+  }, 1500)
+});
+
+app.get("/wrongHolderVCDemo", async (req, res) => {
+  // Consume TD and send test request to Thing1
+  sdJwt = fs.readFileSync(path.resolve(__dirname, "sd-jwt_thing2.json"), 'utf8');
+  clearLog()
+  const tddDID = "did:web:phamkv.github.io:service:discovery"
+  const response = await registerThing(`https://${tdd}:3000/`, tddDID);
+  setTimeout(() => {
+    const prettyLog = generateLogs("app.log")
+    res.send(prettyLog);
+  }, 1500)
+});
+
+app.get('/', (req, res) => {
+  const prettyLog = generateLogs("app.log")
+  res.send(prettyLog);
+})
+
+app.listen(port, async () => {
+  logger.debug(`Thing1 (RPC FUNCTIONS) is listening at http://localhost:${port}`);
+  await startThingExample();
+  printSteps();
 });
 
 async function registerThing(url, DIDReceiver) {
@@ -110,32 +160,18 @@ async function registerThing(url, DIDReceiver) {
     const duration = perf_hooks.performance.measure("Registration Thing1", 'start', 'end');
     durationArray.push(duration)
     logger.debug(response2.data)
-    logger.info('Step 2: Registration DIDComm successfully accepted by TD Directory');
+    if (response2.status === 403) {
+      logger.info('Step 2: Registration DIDComm not accepted by TD Directory');
+    } else {
+      logger.info('Step 2: Registration DIDComm successfully accepted by TD Directory');
+    }
     return response2
   } catch (error) {
     logger.error(error);
   }
 }
 
-app.get("/registrationDemo", async (req, res) => {
-  // Consume TD and send test request to Thing1
-  const tddDID = "did:web:phamkv.github.io:service:discovery"
-  const response = await registerThing('https://localhost:3000/', tddDID);
-  // outputMeasurement()
-  setTimeout(() => {
-    const prettyLog = generateLogs()
-    res.send(prettyLog);
-  }, 1000)
-});
-
-app.listen(port, async () => {
-  logger.debug(`Thing1 (RPC FUNCTIONS) is listening at http://localhost:${port}`);
-  await startThingExample();
-  printSteps();
-});
-
 const printSteps = () => {
-  const hi = "Hallo"
   logger.info("======Execute the demo by sending the follwing RPCs=======")
   logger.info(`http://localhost:${port}/registrationDemo`);
 }
@@ -152,19 +188,30 @@ const outputMeasurement = () => {
   });
 }
 
-const generateLogs = () => {
-  const log = fs.readFileSync(path.resolve(__dirname, "app.log"), 'utf-8');
-  const logEntries = log.trim().split('\n').map(line => JSON.parse(line));
-  // Convert log entries to a pretty format
-  const prettyLog = logEntries.map(entry => {
-    let message = entry.message;
-    // Check if the message is an object and stringify it if so
-    if (message && typeof message === 'object') {
-        message = '<pre>' + JSON.stringify(message, null, 2) + '</pre>';
-    }
-    return `[${entry.timestamp}] ${entry.level.toUpperCase()}: ${message}`;
-  }).join('<br>');
-  return cssStyles + '<pre>' + prettyLog + '</pre>'
+const generateLogs = (filename) => {
+  try {
+    const log = fs.readFileSync(path.resolve(__dirname, filename), 'utf-8');
+    const logEntries = log.trim().split('\n').map(line => {
+      try {
+        return JSON.parse(line);
+      } catch (e) {
+        console.error(`Error parsing line: ${line}`, e);
+        return `Error parsing line: ${line}`; 
+      }
+    }).filter(entry => entry !== null);
+    
+    const prettyLog = logEntries.map(entry => {
+      let message = entry.message;
+      // Check if the message is an object and stringify it if so
+      if (message && typeof message === 'object') {
+          message = '<pre>' + JSON.stringify(message, null, 2) + '</pre>';
+      }
+      return `[${entry.timestamp}] ${entry.level.toUpperCase()}: ${message}`;
+    }).join('<br>');
+    return cssStyles + '<pre>' + prettyLog + '</pre>'
+  } catch (error) {
+    return error
+  }
 }
 
 const cssStyles = `
@@ -182,3 +229,17 @@ const cssStyles = `
     }
 </style>
 `;
+
+const clearLog = () => {
+  logger = winston.createLogger({
+    level: "debug",
+    format: winston.format.combine(
+      winston.format.timestamp(),
+      winston.format.json()
+    ),
+    transports: [
+      new winston.transports.File({ filename: path.resolve(__dirname, "error.log"), level: "warn" }),
+      new winston.transports.File({ filename: path.resolve(__dirname, "app.log"), options: { flags: 'w' }}),
+    ],
+  });
+}

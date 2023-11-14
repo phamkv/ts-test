@@ -12,6 +12,11 @@ import { verifySdJwt } from '../utils/sd-jwt/verify-sd-jwt.js';
 import { resolvePublicKeyWeb } from '../utils/comm/didweb.js';
 import * as createSdJwt from "./create-sdjwt.js"
 
+const outgoing = process.env.ISS1 || "localhost"
+const thing2 = process.env.THING2 || "localhost"
+const tdd = process.env.TDD || "localhost"
+const thing1 = process.env.THING1 || "localhost"
+
 const port = 3004;
 const app = express();
 const httpsApp = express();
@@ -21,7 +26,9 @@ httpsApp.use(bodyParser.text({ type: 'application/didcomm-encrypted+json' }));
 
 // ONLY FOR DEMO / DEVELOPMENT PURPOSES
 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
-const instance = axios.create({ httpsAgent })
+const instance = axios.create({ httpsAgent, validateStatus: function (status) {
+  return status < 500;
+}})
 
 const DIDSender = "did:web:phamkv.github.io:issuer:manufacturer1"
 const messageClient = new MessageClient(DIDSender, ISS1_SECRETS)
@@ -96,7 +103,7 @@ app.get('/deleteThing1', async (req, res) => {
       }
     }
     const sending = await messageClient.createMessage("did:web:phamkv.github.io:service:discovery", obj)
-    const endpoint = "https://localhost:3000/"
+    const endpoint = `https://${tdd}:3000/`
     const response = await instance.post(endpoint, sending, {
       headers: {
         'content-type': 'application/didcomm-encrypted+json'
@@ -114,13 +121,12 @@ app.get('/deleteThing1', async (req, res) => {
 });
 
 server.listen(4000, () => {
-  console.log(`Issuer1 is listening at https://localhost:${port}`);
-  console.log(`For DEMO: The entry of Thing1 in the TDD can be deleted using this RPC: https://localhost:${port}/deleteThing1`)
+  console.log(`Issuer1 is listening at https://${outgoing}:${port}`);
 });
 
 app.listen(port, () => {
-  console.log(`Issuer1 is listening at http://localhost:${port}`);
-  console.log(`For DEMO: The entry of Thing1 in the TDD can be deleted using this RPC: https://localhost:${port}/deleteThing1`)
+  console.log(`Issuer1 (RPC FUNCTIONS) is listening at http://localhost:${port}`);
+  console.log(`For DEMO: The entry of Thing1 in the TDD can be deleted using this RPC: http://localhost:${port}/deleteThing1`)
 });
 
 // Functions
@@ -204,7 +210,7 @@ const processMessage = async (unpacked, res) => {
       res.sendStatus(202) // Succesfully Verified
 
       const sending = await messageClient.createMessage(msg.from, obj)
-      const endpoint = "https://localhost:5002/"
+      const endpoint = `https://${thing2}:5002/`
       instance.post(endpoint, sending, {
         headers: {
           'content-type': 'application/didcomm-encrypted+json'
@@ -235,12 +241,12 @@ const tdStorage = {
     "properties": {
         "status": {
             "type": "string",
-            "forms": [{"href": "http://localhost:8080/lightswitch/properties/status"}]
+            "forms": [{"href": `http://${thing1}:8080/lightswitch/properties/status`}]
         }
     },
     "actions": {
         "toggle": {
-            "forms": [{"href": "http://localhost:8080/lightswitch/actions/toggle"}]
+            "forms": [{"href": `http://${thing1}:8080/lightswitch/actions/toggle`}]
         }
     },
     "events": {}

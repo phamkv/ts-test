@@ -28,7 +28,9 @@ app.use(bodyParser.json({ type: 'discover-features/query' }));
 
 // ONLY FOR DEMO / DEVELOPMENT PURPOSES
 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
-const instance = axios.create({ httpsAgent })
+const instance = axios.create({ httpsAgent, validateStatus: function (status) {
+  return status < 500;
+}})
 
 const DIDSender = "did:web:phamkv.github.io:service:discovery"
 const messageClient = new MessageClient(DIDSender, TDD_SECRETS)
@@ -51,7 +53,7 @@ const key = fs.readFileSync(path.resolve(__dirname, "./key.pem"));
 const cert = fs.readFileSync(path.resolve(__dirname, "./cert.pem"));
 const server = https.createServer({key: key, cert: cert }, httpsApp);
 
-const logger = winston.createLogger({
+let logger = winston.createLogger({
   level: "debug",
   format: winston.format.combine(
     winston.format.timestamp(),
@@ -63,6 +65,10 @@ const logger = winston.createLogger({
   ],
 });
 
+const outgoing = process.env.TDD || "localhost"
+const thing2 = process.env.THING2 || "localhost"
+const issuer1 = process.env.ISS1 || "localhost"
+
 // DIDComm Presentation Submission for Registration
 httpsApp.post('/', (req, res, next) => {
   const contentType = req.headers['content-type'];
@@ -71,6 +77,7 @@ httpsApp.post('/', (req, res, next) => {
   next();
 }, async (req, res) => {
   try {
+    clearLog()
     logger.debug("===========================================")
     logger.info("Received incoming DIDComm Message")
     perf_hooks.performance.mark('start');
@@ -83,7 +90,7 @@ httpsApp.post('/', (req, res, next) => {
     // durationArray.push(duration)
   } catch (error) {
     logger.error(error)
-    res.status(406).send(error)
+    res.status(403).send(error)
   }
 });
 
@@ -101,7 +108,12 @@ httpsApp.get('/TDDQuery', (req, res, next) => {
 });
 
 app.get('/', (req, res) => {
-  const prettyLog = generateLogs()
+  const prettyLog = generateLogs("app.log")
+  res.send(prettyLog);
+})
+
+app.get('/error', (req, res) => {
+  const prettyLog = generateLogs("error.log")
   res.send(prettyLog);
 })
 
@@ -113,7 +125,7 @@ app.get('/memoryCapture', (req, res) => {
 })
 
 server.listen(3000, () => {
-  logger.debug(`Thing Description Directory is listening at https://localhost:${port}`);
+  logger.debug(`Thing Description Directory is listening at https://${outgoing}:${port}`);
 });
 
 app.listen(port, async () => {
@@ -149,7 +161,7 @@ const deleteThing = (thingId, issuer) => { // stub for deletion
 }
 
 const verifyStatus = async (cred) => {
-  const uri = cred.jwt.status.uri
+  const uri = cred.jwt.status.uri.replace('localhost', issuer1);
   const response = await instance.get(uri)
   const statusListJwt = parseJwt(response.data)
   logger.debug("Status List Token:")
@@ -211,7 +223,7 @@ const verifyCredential = async (encryptedMessage) => {
       perf_hooks.performance.mark('status_start');
       const status = await verifyStatus(cred)
       if (!status) {
-        throw "Credential Status is not valid!"
+        throw "Rejected: Credential Status is not valid!"
       } 
       perf_hooks.performance.mark('status_end');
       const duration = perf_hooks.performance.measure("Status Check", 'status_start', 'status_end');
@@ -240,12 +252,16 @@ const verifyCredential = async (encryptedMessage) => {
     for (let path of jspath) {
       try {
         if (jp.query(cred, path).length < 1 ) {
-          throw "Credential does not have the required attributes"
+          throw "Rejected: Credential does not have the required attributes"
         }
       } catch (error) {
         logger.error(error)
         throw error
       }
+    }
+    logger.info("Checking if sender is actually Holder of VC...")
+    if (cred.disclosed.id !== msg.from) {
+      throw "Rejected: Sender is not Holder of VC"
     }
     logger.info("SD-JWT is valid")
     return { cred, msg }
@@ -282,7 +298,7 @@ const processMessage = async (unpacked, res) => {
     
       res.sendStatus(202)
       const sending = await messageClient.createMessage(msg.from, obj)
-      const endpoint = "https://localhost:5002/"
+      const endpoint = `https://${thing2}:5002/`
       instance.post(endpoint, sending, {
         headers: {
           'content-type': 'application/didcomm-encrypted+json'
@@ -320,10 +336,17 @@ const outputMeasurement = () => {
   });
 }
 
-const generateLogs = () => {
-  const log = fs.readFileSync(path.resolve(__dirname, "app.log"), 'utf-8');
-  const logEntries = log.trim().split('\n').map(line => JSON.parse(line));
-  // Convert log entries to a pretty format
+const generateLogs = (filename) => {
+  const log = fs.readFileSync(path.resolve(__dirname, filename), 'utf-8');
+  const logEntries = log.trim().split('\n').map(line => {
+    try {
+      return JSON.parse(line);
+    } catch (e) {
+      console.error(`Error parsing line: ${line}`, e);
+      return `Error parsing line: ${line}`; 
+    }
+  }).filter(entry => entry !== null);
+
   const prettyLog = logEntries.map(entry => {
     let message = entry.message;
     // Check if the message is an object and stringify it if so
@@ -350,6 +373,20 @@ const cssStyles = `
     }
 </style>
 `;
+
+const clearLog = () => {
+  logger = winston.createLogger({
+    level: "debug",
+    format: winston.format.combine(
+      winston.format.timestamp(),
+      winston.format.json()
+    ),
+    transports: [
+      new winston.transports.File({ filename: path.resolve(__dirname, "error.log"), level: "warn" }),
+      new winston.transports.File({ filename: path.resolve(__dirname, "app.log"), options: { flags: 'w' }}),
+    ],
+  });
+}
 
 /*
 app.get('/', (req, res) => {
