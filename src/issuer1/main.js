@@ -51,12 +51,6 @@ const key = fs.readFileSync(path.resolve(__dirname, "./key.pem"));
 const cert = fs.readFileSync(path.resolve(__dirname, "./cert.pem"));
 const server = https.createServer({key: key, cert: cert }, httpsApp);
 
-// Create sd-jwt for thing1 if not created [DEV]
-const outPath = path.resolve(__dirname, "../thing1/sd-jwt-test.json")
-if (!fs.existsSync(outPath)) {
-  createSdJwt.main(outPath)
-}
-
 // Presentation Request for Registration
 httpsApp.get('/IssuerRequest', (req, res) => {
   const sdJwt = fs.readFileSync(path.resolve(__dirname, "thingDescription_presentation_definition.json"), 'utf8');
@@ -114,7 +108,7 @@ app.get('/deleteThing1', async (req, res) => {
     durationArray.push(del_duration)
     // outputMeasurement()
     console.log(response.data)
-    res.send("Please check the consoles")
+    res.send("Please check the logs of TD Directory")
   } catch(error) {
     res.sendStatus(500)
   }
@@ -253,43 +247,3 @@ const tdStorage = {
   }
 } // Simple hashmap storage for demo
 
-/*
-app.get('/', (req, res) => {
-  const contentType = req.headers['content-type'];
-  console.log(contentType)
-  if (contentType === 'discover-features/query') {
-    console.log(req.body)
-    if (req.body.type !== "https://didcomm.org/discover-features/2.0/queries")
-      return res.status(415).send('Unsupported Protocol')
-
-      // logic for selective disclosure could be implemented here
-      const data = {
-        "type": "https://didcomm.org/discover-features/2.0/disclose",
-        "thid": req.body.id,
-        "body":{
-            "disclosures": [
-              {
-                "feature-type": "protocol",
-                "id": "https://identity.foundation/presentation-exchange/spec/v2.0.0",
-                "roles": ["verifier"]
-              },
-              {
-                "feature-type": "goal-code",
-                "id": "wot.thing.description.registration",
-                "request": ["/registration", "get"]
-              },
-              {
-                "feature-type": "goal-code",
-                "id": "wot.thing.description.query",
-                "request": ["/query", "get"]
-              }
-            ]
-        }
-      }
-      res.type("discover-features/disclose")
-      res.send(data)
-  } else {
-    res.send("Hello World!")
-  }
-});
-*/

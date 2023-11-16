@@ -1,5 +1,5 @@
 {
-  "name": "ts-test",
+  "name": "bachelor-thesis-project",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -7,7 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Kevin Hai Nam Pham pham@tu-berlin.de",
   "license": "ISC",
   "dependencies": {
     "@node-wot/binding-http": "^0.8.8",

@@ -166,6 +166,7 @@ httpsServer.listen(5002, () => {
 });
 
 app.listen(port, async () => {
+  console.log(`Thing2 (RPC FUNCTIONS) is listening at http://localhost:${port}`);
   logger.debug(`Thing2 (RPC FUNCTIONS) is listening at http://localhost:${port}`);
   printSteps();
 });

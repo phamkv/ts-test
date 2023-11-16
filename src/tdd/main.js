@@ -129,6 +129,7 @@ server.listen(3000, () => {
 });
 
 app.listen(port, async () => {
+  console.log(`TDD (RPC FUNCTIONS) is listening at http://localhost:${port}`);
   logger.debug(`TDD (RPC FUNCTIONS) is listening at http://localhost:${port}`);
 });
 
