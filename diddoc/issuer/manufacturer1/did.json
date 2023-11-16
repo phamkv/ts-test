@@ -1,0 +1,45 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/did/v1",
+    "https://w3id.org/security/suites/jws-2020/v1"
+  ],
+  "id": "did:web:phamkv.github.io:issuer:manufacturer1",
+  "keyAgreement": [
+    "did:web:phamkv.github.io:issuer:manufacturer1#owner"
+  ],
+  "verificationMethod": [
+    {
+      "id": "did:web:phamkv.github.io:issuer:manufacturer1#owner",
+      "type": "JsonWebKey2020",
+      "controller": "did:web:phamkv.github.io:issuer:manufacturer1",
+      "publicKeyJwk": {
+        "kty": "EC",
+        "x": "TthAsG7uLZfKpJ_eIKQQZLAqLfW5Y_db5Q6drbpeG1c",
+        "y": "S5O2gx0phq7r3Rhqe-QtLIBuAWKsalTldNBfIxXxE_k",
+        "crv": "P-256",
+        "kid": "bJqQFEDzYqNbhzF44khM1CApNw5v1HSGpWJOmKBMwN4",
+        "use": "sig"
+      }
+    }
+  ],
+  "authentication": [
+    "did:web:phamkv.github.io:issuer:manufacturer1#owner"
+  ],
+  "assertionMethod": [
+    "did:web:phamkv.github.io:issuer:manufacturer1#owner"
+  ],
+  "service": [
+    {
+      "id":"did:web:phamkv.github.io:issuer:manufacturer1#didcomm",
+      "type": "DIDCommMessaging", 
+      "serviceEndpoint": {
+        "uri": "http://localhost:4000/",
+        "accept": [
+          "didcomm/v2",
+          "didcomm/aip2;env=rfc587"
+        ],
+        "routingKeys": ["did:web:phamkv.github.io:issuer:manufacturer1#owner"]
+      }
+    }
+  ]
+}

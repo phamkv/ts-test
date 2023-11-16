@@ -1,0 +1,45 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/did/v1",
+    "https://w3id.org/security/suites/jws-2020/v1"
+  ],
+  "id": "did:web:phamkv.github.io:service:discovery",
+  "keyAgreement": [
+    "did:web:phamkv.github.io:service:discovery#owner"
+  ],
+  "verificationMethod": [
+    {
+      "id": "did:web:phamkv.github.io:service:discovery#owner",
+      "type": "JsonWebKey2020",
+      "controller": "did:web:phamkv.github.io:service:discovery",
+      "publicKeyJwk": {
+        "kty": "EC",
+        "x": "MsZt5AAwz6A9C70AG7CBw0epdgv7esi1gEBcMGtpq60",
+        "y": "O-B9d6J7Ev80jMLxbv47uv0irdtaVa8rwov8yMw2zos",
+        "crv": "P-256",
+        "kid": "cJLFA_0njBwHfmliTVT9ux72rYiTaQw607-oSbTWxpY",
+        "use": "sig"
+      }
+    }
+  ],
+  "authentication": [
+    "did:web:phamkv.github.io:service:discovery#owner"
+  ],
+  "assertionMethod": [
+    "did:web:phamkv.github.io:service:discovery#owner"
+  ],
+  "service": [
+    {
+      "id":"did:web:phamkv.github.io:service:discovery#didcomm",
+      "type": "DIDCommMessaging", 
+      "serviceEndpoint": {
+        "uri": "http://localhost:3000/",
+        "accept": [
+          "didcomm/v2",
+          "didcomm/aip2;env=rfc587"
+        ],
+        "routingKeys": ["did:web:phamkv.github.io:service:discovery#owner"]
+      }
+    }
+  ]
+}
