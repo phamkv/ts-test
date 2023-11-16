@@ -1,15 +1,4 @@
 {
-  "comment": [
-    {
-      "transport": "DIDComm v2",
-      "content-type": "application/didcomm-encrypted+json",
-      "endpoint": "/registration",
-      "rest": {
-        "post": "Create or Update Thing Description Registration",
-        "delete": "Delete Thing Description Registration"
-      }
-    }
-  ],
   "presentation_definition": {
     "id": "td_registration_definition",
     "input_descriptors": [

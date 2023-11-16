@@ -1,14 +1,4 @@
 {
-  "comment": [
-    {
-      "transport": "DIDComm v2",
-      "content-type": "application/didcomm-encrypted+json",
-      "endpoint": "/query",
-      "rest": {
-        "get": "Send Thing Description Query Request"
-      }
-    }
-  ],
   "presentation_definition": {
     "id": "td_query_definition",
     "input_descriptors": [
